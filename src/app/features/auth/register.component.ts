@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
 /**
  * Register Component (Placeholder)
@@ -12,7 +13,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LucideAngularModule],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary to-primary">
       <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full">
@@ -30,11 +31,25 @@ import { CommonModule } from '@angular/common';
             placeholder="WhatsApp (com DDD)"
             class="input-base"
           />
-          <input
-            type="password"
-            placeholder="Senha"
-            class="input-base"
-          />
+
+          <div class="relative">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              placeholder="Senha"
+              class="input-base pr-12"
+            />
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <lucide-icon
+                [img]="showPassword() ? EyeOffIcon : EyeIcon"
+                [size]="20"
+              ></lucide-icon>
+            </button>
+          </div>
+
           <button class="w-full btn-primary py-3">
             Cadastrar
           </button>
@@ -50,4 +65,18 @@ import { CommonModule } from '@angular/common';
     </div>
   `
 })
-export class RegisterComponent {}
+export class RegisterComponent {
+  // Ícones do Lucide
+  EyeIcon = Eye;
+  EyeOffIcon = EyeOff;
+
+  // Signal para controlar visibilidade da senha
+  showPassword = signal(false);
+
+  /**
+   * Toggle password visibility
+   */
+  togglePasswordVisibility() {
+    this.showPassword.update(value => !value);
+  }
+}
