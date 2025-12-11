@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Frontend Angular
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meusecretario-frontend
+    ports:
+      - "4200:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - meusecretario-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend Flask (exemplo - ajuste conforme seu backend)
+  backend:
+    image: meusecretario-backend:latest  # Substitua pela imagem real do seu backend
+    container_name: meusecretario-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://user:pass@db:5432/meusecretario
+    networks:
+      - meusecretario-network
+    restart: unless-stopped
+
+networks:
+  meusecretario-network:
+    driver: bridge

@@ -1,0 +1,40 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Build output
+dist
+.angular
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Tests
+coverage
+*.spec.ts
+
+# Documentation
+README.md
+docs
+
+# Environment files (serão injetados via Docker)
+.env
+.env.local
+.env.*.local
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Outros
+.DS_Store
+Thumbs.db

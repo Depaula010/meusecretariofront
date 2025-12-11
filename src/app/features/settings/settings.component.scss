@@ -1,0 +1,25 @@
+// Settings Component Styles
+// Estilos customizados para o componente de configurações
+
+:host {
+  display: block;
+}
+
+// Animação para o loading spinner
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Toggle Switch customizado (caso precise de estilos adicionais)
+input[type="checkbox"]:checked {
+  @apply bg-primary;
+}

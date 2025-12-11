@@ -1,0 +1,298 @@
+<div class="max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Configurações do Assistente</h1>
+    <p class="text-gray-600 mt-2">Personalize seu assistente financeiro e configure integrações</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-8 px-6" aria-label="Tabs">
+        <button
+          (click)="setTab('api-keys')"
+          [class.border-primary]="selectedTab() === 'api-keys'"
+          [class.text-primary]="selectedTab() === 'api-keys'"
+          [class.border-transparent]="selectedTab() !== 'api-keys'"
+          [class.text-gray-500]="selectedTab() !== 'api-keys'"
+          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+        >
+          <lucide-icon [img]="KeyIcon" [size]="18"></lucide-icon>
+          <span>API Keys</span>
+        </button>
+
+        <button
+          (click)="setTab('notifications')"
+          [class.border-primary]="selectedTab() === 'notifications'"
+          [class.text-primary]="selectedTab() === 'notifications'"
+          [class.border-transparent]="selectedTab() !== 'notifications'"
+          [class.text-gray-500]="selectedTab() !== 'notifications'"
+          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+        >
+          <lucide-icon [img]="BellIcon" [size]="18"></lucide-icon>
+          <span>Notificações</span>
+        </button>
+
+        <button
+          (click)="setTab('addresses')"
+          [class.border-primary]="selectedTab() === 'addresses'"
+          [class.text-primary]="selectedTab() === 'addresses'"
+          [class.border-transparent]="selectedTab() !== 'addresses'"
+          [class.text-gray-500]="selectedTab() !== 'addresses'"
+          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+        >
+          <lucide-icon [img]="MapPinIcon" [size]="18"></lucide-icon>
+          <span>Endereços</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="p-6">
+      <!-- API Keys Tab -->
+      @if (selectedTab() === 'api-keys') {
+        <div class="space-y-6">
+          <!-- Header da seção -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-900 mb-1">🔑 Bring Your Own Key (BYOK)</h3>
+            <p class="text-sm text-blue-700">
+              Use suas próprias chaves de API para maior controle e privacidade. Caso contrário, usaremos as chaves do sistema (com limite de uso compartilhado).
+            </p>
+          </div>
+
+          <!-- Gemini API Key -->
+          @for (keyType of [ApiKeyType.GEMINI, ApiKeyType.WEATHER, ApiKeyType.OPENROUTE]; track keyType) {
+            <div class="border border-gray-200 rounded-lg p-6">
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <h4 class="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <lucide-icon [img]="KeyIcon" [size]="20" class="text-primary"></lucide-icon>
+                    <span>{{ apiKeyInfo[keyType].name }}</span>
+                  </h4>
+                  <p class="text-sm text-gray-600 mt-1">{{ apiKeyInfo[keyType].description }}</p>
+                  <a
+                    [href]="apiKeyInfo[keyType].link"
+                    target="_blank"
+                    class="text-sm text-primary hover:underline mt-1 inline-block"
+                  >
+                    Obter chave de API →
+                  </a>
+                </div>
+              </div>
+
+              <!-- Toggle: Usar minha chave -->
+              <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-4">
+                <div>
+                  <label class="font-medium text-gray-900">Usar minha própria chave</label>
+                  <p class="text-sm text-gray-600">Desabilite para usar a chave compartilhada do sistema</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="apiKeyForms()[keyType].useOwnKey"
+                    class="sr-only peer"
+                  />
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+
+              <!-- Input da chave (se "Usar minha chave" estiver ativo) -->
+              @if (apiKeyForms()[keyType].useOwnKey) {
+                <div class="space-y-3">
+                  <div class="relative">
+                    <input
+                      [type]="showKeys()[keyType] ? 'text' : 'password'"
+                      [(ngModel)]="apiKeyForms()[keyType].key"
+                      [placeholder]="apiKeyInfo[keyType].placeholder"
+                      class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-mono text-sm"
+                    />
+                    <button
+                      (click)="toggleKeyVisibility(keyType)"
+                      type="button"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      <lucide-icon
+                        [img]="showKeys()[keyType] ? EyeOffIcon : EyeIcon"
+                        [size]="20"
+                      ></lucide-icon>
+                    </button>
+                  </div>
+
+                  <div class="flex space-x-3">
+                    <button
+                      (click)="validateApiKey(keyType)"
+                      [disabled]="!apiKeyForms()[keyType].key"
+                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      Validar Chave
+                    </button>
+                    <button
+                      (click)="saveApiKey(keyType)"
+                      [disabled]="!isApiKeyFormValid(keyType)"
+                      class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center space-x-2"
+                    >
+                      <lucide-icon [img]="SaveIcon" [size]="16"></lucide-icon>
+                      <span>Salvar</span>
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                  ℹ️ Usando chave compartilhada do sistema (limite de requisições aplicável)
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Notifications Tab -->
+      @if (selectedTab() === 'notifications') {
+        <div class="space-y-6">
+          <!-- Header da seção -->
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="font-semibold text-purple-900 mb-1">🔔 Configurações de Notificações</h3>
+            <p class="text-sm text-purple-700">
+              Configure como e quando deseja receber alertas do seu assistente financeiro
+            </p>
+          </div>
+
+          <!-- Resumo Matinal -->
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h4 class="text-lg font-semibold text-gray-900">☀️ Resumo Matinal</h4>
+                <p class="text-sm text-gray-600 mt-1">
+                  Receba um resumo diário das suas finanças, clima e agenda
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="notificationForm().morningBriefing.enabled"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            @if (notificationForm().morningBriefing.enabled) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                <input
+                  type="time"
+                  [(ngModel)]="notificationForm().morningBriefing.time"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            }
+          </div>
+
+          <!-- Check-in Noturno -->
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h4 class="text-lg font-semibold text-gray-900">🌙 Check-in Noturno</h4>
+                <p class="text-sm text-gray-600 mt-1">
+                  Registro de despesas do dia e preparação para amanhã
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="notificationForm().eveningCheckIn.enabled"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            @if (notificationForm().eveningCheckIn.enabled) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                <input
+                  type="time"
+                  [(ngModel)]="notificationForm().eveningCheckIn.time"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            }
+          </div>
+
+          <!-- Alertas Financeiros -->
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h4 class="text-lg font-semibold text-gray-900">💰 Alertas Financeiros</h4>
+                <p class="text-sm text-gray-600 mt-1">
+                  Notificações de contas a vencer e vencimentos de cartão
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="notificationForm().financialAlerts.enabled"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+
+            @if (notificationForm().financialAlerts.enabled) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Alertar com quantos dias de antecedência?
+                </label>
+                <input
+                  type="number"
+                  [(ngModel)]="notificationForm().financialAlerts.daysBeforeDue"
+                  min="1"
+                  max="30"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-24"
+                />
+                <span class="ml-2 text-sm text-gray-600">dias antes</span>
+              </div>
+            }
+          </div>
+
+          <!-- Botão de salvar -->
+          <div class="flex justify-end">
+            <button
+              (click)="saveNotifications()"
+              class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center space-x-2"
+            >
+              <lucide-icon [img]="SaveIcon" [size]="18"></lucide-icon>
+              <span>Salvar Notificações</span>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Addresses Tab -->
+      @if (selectedTab() === 'addresses') {
+        <div class="space-y-6">
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 class="font-semibold text-green-900 mb-1">📍 Endereços Favoritos</h3>
+            <p class="text-sm text-green-700">
+              Configure endereços frequentes para rotas e deslocamentos
+            </p>
+          </div>
+
+          <div class="text-center py-12 text-gray-500">
+            Em desenvolvimento...
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  @if (settingsService.loading()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <lucide-icon [img]="LoaderIcon" [size]="24" class="text-primary animate-spin"></lucide-icon>
+        <span class="text-gray-700 font-medium">Salvando...</span>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,42 @@
+// Dashboard Component Styles
+
+:host {
+  display: block;
+}
+
+// Animações customizadas
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-base {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Scrollbar customizada para lista de alertas
+.overflow-y-auto {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
