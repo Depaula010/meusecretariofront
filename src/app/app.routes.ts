@@ -1,16 +1,13 @@
 import { Routes } from '@angular/router';
-// import { authGuard, publicGuard } from './core/guards/auth.guard'; // COMENTADO TEMPORARIAMENTE
+import { authGuard, publicGuard } from './core/guards/auth.guard';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 
 /**
  * Rotas da Aplicação
  *
- * GUARDS DESABILITADOS TEMPORARIAMENTE PARA DESENVOLVIMENTO
- * Para reabilitar: descomente a importação acima e as linhas com canActivate
- *
  * Estrutura:
  * - / → Redireciona para /dashboard (se autenticado) ou /auth/login
- * - /auth → Rotas públicas (Login, Cadastro) com lazy loading
+ * - /auth → Rotas públicas (Login, Cadastro) com lazy loading e publicGuard
  * - Rotas privadas (Dashboard, Finanças, etc.) com MainLayout e authGuard
  */
 export const routes: Routes = [
@@ -26,7 +23,7 @@ export const routes: Routes = [
   // ==========================================
   {
     path: 'auth',
-    // canActivate: [publicGuard], // COMENTADO - reabilite quando implementar autenticação
+    canActivate: [publicGuard],
     children: [
       {
         path: 'login',
@@ -54,7 +51,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
-    // canActivate: [authGuard], // COMENTADO - reabilite quando implementar autenticação
+    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
