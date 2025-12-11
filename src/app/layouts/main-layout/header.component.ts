@@ -1,5 +1,8 @@
-import { Component, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Output, EventEmitter, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import {
   LucideAngularModule,
   Menu,
@@ -106,7 +109,7 @@ import {
   `,
   styles: []
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   // Ícones do Lucide
@@ -121,6 +124,54 @@ export class HeaderComponent {
   notificationCount = signal(3);
   userName = signal('Usuário Demo');
   userPlan = signal('Plano Prata');
+
+  // Subscription para limpar no destroy
+  private routerSubscription?: Subscription;
+
+  // Mapeamento de rotas para títulos
+  private routeTitles: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/finances': 'Minhas Finanças',
+    '/finances/transactions': 'Transações',
+    '/finances/accounts': 'Contas Bancárias',
+    '/settings': 'Configurações',
+    '/subscription': 'Assinatura',
+  };
+
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    // Atualizar título na inicialização
+    this.updatePageTitle(this.router.url);
+
+    // Observar mudanças de rota
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd) {
+          this.updatePageTitle(event.urlAfterRedirects);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    // Limpar subscription
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Atualizar título da página baseado na URL
+   */
+  private updatePageTitle(url: string) {
+    // Remover query params e fragments
+    const cleanUrl = url.split('?')[0].split('#')[0];
+
+    // Buscar título correspondente
+    const title = this.routeTitles[cleanUrl] || 'Meu Secretário';
+    this.pageTitle.set(title);
+  }
 
   /**
    * Toggle user dropdown menu
