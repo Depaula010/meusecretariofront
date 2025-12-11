@@ -1,14 +1,14 @@
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto w-full">
   <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Configurações do Assistente</h1>
-    <p class="text-gray-600 mt-2">Personalize seu assistente financeiro e configure integrações</p>
+  <div class="mb-6 md:mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">Configurações do Assistente</h1>
+    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">Personalize seu assistente financeiro e configure integrações</p>
   </div>
 
   <!-- Tabs -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-    <div class="border-b border-gray-200">
-      <nav class="flex space-x-8 px-6" aria-label="Tabs">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+    <div class="border-b border-gray-200 overflow-x-auto">
+      <nav class="flex space-x-4 md:space-x-8 px-4 md:px-6 min-w-max" aria-label="Tabs">
         <button
           (click)="setTab('api-keys')"
           [class.border-primary]="selectedTab() === 'api-keys'"
@@ -48,7 +48,7 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="p-6">
+    <div class="p-4 md:p-6 overflow-x-hidden">
       <!-- API Keys Tab -->
       @if (selectedTab() === 'api-keys') {
         <div class="space-y-6">
@@ -62,18 +62,18 @@
 
           <!-- Gemini API Key -->
           @for (keyType of [ApiKeyType.GEMINI, ApiKeyType.WEATHER, ApiKeyType.OPENROUTE]; track keyType) {
-            <div class="border border-gray-200 rounded-lg p-6">
+            <div class="border border-gray-200 rounded-lg p-4 md:p-6 overflow-hidden">
               <div class="flex items-start justify-between mb-4">
-                <div>
-                  <h4 class="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                    <lucide-icon [img]="KeyIcon" [size]="20" class="text-primary"></lucide-icon>
-                    <span>{{ apiKeyInfo[keyType].name }}</span>
+                <div class="flex-1 min-w-0 pr-2">
+                  <h4 class="text-base md:text-lg font-semibold text-gray-900 flex items-center space-x-2 flex-wrap">
+                    <lucide-icon [img]="KeyIcon" [size]="20" class="text-primary flex-shrink-0"></lucide-icon>
+                    <span class="break-words">{{ apiKeyInfo[keyType].name }}</span>
                   </h4>
-                  <p class="text-sm text-gray-600 mt-1">{{ apiKeyInfo[keyType].description }}</p>
+                  <p class="text-xs md:text-sm text-gray-600 mt-1 break-words">{{ apiKeyInfo[keyType].description }}</p>
                   <a
                     [href]="apiKeyInfo[keyType].link"
                     target="_blank"
-                    class="text-sm text-primary hover:underline mt-1 inline-block"
+                    class="text-xs md:text-sm text-primary hover:underline mt-1 inline-block break-all"
                   >
                     Obter chave de API →
                   </a>
@@ -81,10 +81,10 @@
               </div>
 
               <!-- Toggle: Usar minha chave -->
-              <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-4">
-                <div>
-                  <label class="font-medium text-gray-900">Usar minha própria chave</label>
-                  <p class="text-sm text-gray-600">Desabilite para usar a chave compartilhada do sistema</p>
+              <div class="flex items-start md:items-center justify-between gap-3 bg-gray-50 rounded-lg p-3 md:p-4 mb-4">
+                <div class="flex-1 min-w-0">
+                  <label class="text-sm md:text-base font-medium text-gray-900 break-words">Usar minha própria chave</label>
+                  <p class="text-xs md:text-sm text-gray-600 break-words">Desabilite para usar a chave compartilhada do sistema</p>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input
@@ -118,18 +118,18 @@
                     </button>
                   </div>
 
-                  <div class="flex space-x-3">
+                  <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button
                       (click)="validateApiKey(keyType)"
                       [disabled]="!apiKeyForms()[keyType].key"
-                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm font-medium"
                     >
                       Validar Chave
                     </button>
                     <button
                       (click)="saveApiKey(keyType)"
                       [disabled]="!isApiKeyFormValid(keyType)"
-                      class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center space-x-2"
+                      class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm font-medium flex items-center justify-center space-x-2"
                     >
                       <lucide-icon [img]="SaveIcon" [size]="16"></lucide-icon>
                       <span>Salvar</span>

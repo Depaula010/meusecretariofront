@@ -19,7 +19,7 @@ import { HeaderComponent } from './header.component';
   standalone: true,
   imports: [CommonModule, RouterOutlet, SidebarComponent, HeaderComponent],
   template: `
-    <div class="flex h-screen bg-gray-50">
+    <div class="flex h-screen bg-gray-50 overflow-hidden">
       <!-- Sidebar -->
       <app-sidebar
         [isOpen]="isSidebarOpen()"
@@ -27,12 +27,12 @@ import { HeaderComponent } from './header.component';
       />
 
       <!-- Main Content -->
-      <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Header -->
         <app-header (toggleSidebar)="toggleSidebar()" />
 
         <!-- Page Content -->
-        <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 md:p-6">
           <router-outlet />
         </main>
       </div>
