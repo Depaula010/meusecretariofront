@@ -2,12 +2,12 @@
  * Environment de Desenvolvimento
  *
  * Configurações para ambiente local de desenvolvimento.
- * Aponta para a API remota em produção durante o desenvolvimento.
- * Para usar API local, altere apiUrl para 'http://localhost:5000'
+ * Usa proxy reverso configurado em proxy.conf.json para evitar problemas de CORS.
+ * O proxy redireciona chamadas de /api/* e /auth/* para http://212.47.65.37
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://212.47.65.37',
+  apiUrl: '', // Vazio para usar o proxy local (evita CORS)
   apiPrefix: '',
   appName: 'Meu Secretário',
   version: '1.0.0',

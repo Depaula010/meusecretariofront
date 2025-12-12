@@ -3,6 +3,7 @@ import { provideRouter, withComponentInputBinding, withViewTransitions } from '@
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 /**
  * Configuração da Aplicação Angular 18+
@@ -11,6 +12,7 @@ import { routes } from './app.routes';
  * - Router com Component Input Binding e View Transitions
  * - HttpClient com Fetch API e Interceptors
  * - Zone.js com event coalescing para melhor performance
+ * - Auth Interceptor para gerenciar tokens JWT automaticamente
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,11 +26,10 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions() // Transições suaves entre rotas
     ),
 
-    // HttpClient com Fetch API (melhor que XMLHttpRequest)
+    // HttpClient com Fetch API e Interceptors
     provideHttpClient(
       withFetch(),
-      // TODO: Adicionar interceptors aqui quando necessário
-      // withInterceptors([authInterceptor, errorInterceptor])
+      withInterceptors([authInterceptor]) // Adiciona token JWT automaticamente
     )
   ]
 };

@@ -104,12 +104,22 @@ import { AuthService } from '../../core/services/auth.service';
             }
           </div>
 
+          <!-- Informação sobre Configuração Financeira -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 my-4">
+            <p class="text-xs text-blue-700">
+              <strong>💳 Configuração do Cartão:</strong> Precisamos dessas informações para configurar seu cartão de crédito inicial automaticamente e ajudá-lo a gerenciar suas finanças.
+            </p>
+          </div>
+
           <!-- Dia de Vencimento -->
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Dia de Vencimento
+            </label>
             <input
               type="number"
               formControlName="dia_vencimento"
-              placeholder="Dia de vencimento da fatura"
+              placeholder="Dia do vencimento da fatura (ex: 10)"
               class="input-base"
               min="1"
               max="31"
@@ -124,15 +134,22 @@ import { AuthService } from '../../core/services/auth.service';
                   Digite um dia entre 1 e 31
                 }
               </p>
+            } @else {
+              <p class="mt-1 text-xs text-gray-500">
+                Dia do mês em que a fatura vence
+              </p>
             }
           </div>
 
           <!-- Dia de Fechamento -->
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Dia de Fechamento
+            </label>
             <input
               type="number"
               formControlName="dia_fechamento"
-              placeholder="Dia de fechamento da fatura"
+              placeholder="Dia do fechamento da fatura (ex: 5)"
               class="input-base"
               min="1"
               max="31"
@@ -146,6 +163,10 @@ import { AuthService } from '../../core/services/auth.service';
                 @if (registerForm.get('dia_fechamento')?.hasError('min') || registerForm.get('dia_fechamento')?.hasError('max')) {
                   Digite um dia entre 1 e 31
                 }
+              </p>
+            } @else {
+              <p class="mt-1 text-xs text-gray-500">
+                Dia do mês em que a fatura fecha
               </p>
             }
           </div>

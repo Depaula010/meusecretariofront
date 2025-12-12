@@ -1,0 +1,17 @@
+{
+  "/api/*": {
+    "target": "http://212.47.65.37",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/auth/*": {
+    "target": "http://212.47.65.37",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

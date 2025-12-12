@@ -74,8 +74,14 @@ export class AuthService {
     this.isLoading.set(true);
     this.error.set(null);
 
+    // Limpar formatação do WhatsApp (apenas números)
+    const cleanCredentials = {
+      ...credentials,
+      whatsapp: this.cleanWhatsApp(credentials.whatsapp)
+    };
+
     return this.http
-      .post<LoginResponse>(`${this.API_URL}/auth/login`, credentials)
+      .post<LoginResponse>(`${this.API_URL}/auth/login`, cleanCredentials)
       .pipe(
         tap((response) => {
           if (response.status === 'success' && response.token && response.user) {
@@ -96,8 +102,14 @@ export class AuthService {
     this.isLoading.set(true);
     this.error.set(null);
 
+    // Limpar formatação do WhatsApp (apenas números)
+    const cleanUserData = {
+      ...userData,
+      whatsapp: this.cleanWhatsApp(userData.whatsapp)
+    };
+
     return this.http
-      .post<RegisterResponse>(`${this.API_URL}/auth/register`, userData)
+      .post<RegisterResponse>(`${this.API_URL}/auth/register`, cleanUserData)
       .pipe(
         tap((response) => {
           if (response.status === 'success' && response.token && response.user) {
@@ -199,5 +211,12 @@ export class AuthService {
    */
   clearError(): void {
     this.error.set(null);
+  }
+
+  /**
+   * Remove formatação do WhatsApp (deixa apenas números)
+   */
+  private cleanWhatsApp(whatsapp: string): string {
+    return whatsapp.replace(/\D/g, '');
   }
 }
