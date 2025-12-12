@@ -1,15 +1,12 @@
 {
   "/api/*": {
-    "target": "http://212.47.65.37",
+    "target": "[http://212.47.65.37](http://212.47.65.37)",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug",
-    "pathRewrite": {
-      "^/api": ""
-    }
+    "logLevel": "debug"
   },
   "/auth/*": {
-    "target": "http://212.47.65.37",
+    "target": "[http://212.47.65.37](http://212.47.65.37)",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

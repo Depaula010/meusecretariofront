@@ -137,7 +137,7 @@ def get_charts():
 
 ---
 
-### 3. GET `/api/dashboard/recent-transactions`
+### 3. GET `/api/dashboard/recent`
 
 **Descrição**: Retorna últimas 10 transações do usuário.
 
@@ -176,7 +176,7 @@ Authorization: Bearer <token>
 
 **Lógica Sugerida**:
 ```python
-@dashboard_bp.route('/recent-transactions', methods=['GET'])
+@dashboard_bp.route('/recent', methods=['GET'])
 @jwt_required()
 def get_recent_transactions():
     user_id = get_jwt_identity()
@@ -450,7 +450,7 @@ ALLOWED_ROUTES = [
     '/auth/register',
     '/api/dashboard/summary',
     '/api/dashboard/charts',
-    '/api/dashboard/recent-transactions',
+    '/api/dashboard/recent',
     '/api/finances/transactions',
     '/api/finances/accounts',
     # ... outras rotas

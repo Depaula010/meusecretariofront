@@ -18,7 +18,7 @@ import {
  * Serviço responsável por consumir os endpoints do dashboard do backend:
  * - GET /api/dashboard/summary - Retorna KPIs (saldo, receitas, despesas, cartão)
  * - GET /api/dashboard/charts - Retorna dados para gráficos
- * - GET /api/dashboard/recent-transactions - Retorna últimas transações
+ * - GET /api/dashboard/recent - Retorna últimas transações
  *
  * Todos os endpoints exigem autenticação (token JWT via interceptor)
  */
@@ -83,7 +83,7 @@ export class DashboardService {
   /**
    * Obtém as transações recentes (últimas 10)
    *
-   * Endpoint: GET /api/dashboard/recent-transactions
+   * Endpoint: GET /api/dashboard/recent
    *
    * Retorna array de transações com:
    * - id, descricao, valor, tipo, categoria, data, conta_bancaria
@@ -91,7 +91,7 @@ export class DashboardService {
   getRecentTransactions(): Observable<RecentTransaction[]> {
     return this.http
       .get<RecentTransactionsResponse>(
-        `${this.API_URL}/api/dashboard/recent-transactions`
+        `${this.API_URL}/api/dashboard/recent`
       )
       .pipe(
         map((response) => {
