@@ -1,0 +1,22 @@
+// Transactions Component Styles
+
+// Tabela responsiva
+table {
+  min-width: 700px;
+}
+
+// Smooth transitions
+button {
+  transition: all 0.2s ease;
+}
+
+// Mobile adjustments
+@media (max-width: 768px) {
+  table {
+    font-size: 0.875rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+}

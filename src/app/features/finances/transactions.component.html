@@ -1,0 +1,228 @@
+<div class="max-w-7xl mx-auto w-full">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Extrato</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        Visualize todas as suas transações financeiras
+      </p>
+    </div>
+
+    <button class="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
+      <lucide-icon [img]="PlusIcon" [size]="18"></lucide-icon>
+      <span>Nova Transação</span>
+    </button>
+  </div>
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-sm text-red-700">{{ error() }}</p>
+      <button
+        (click)="loadTransactions()"
+        class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  <!-- Cards de Resumo -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Total Receitas -->
+    <div class="card-base border-l-4 border-green-500">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm text-gray-600 font-medium mb-1">Total Receitas</p>
+          <h3 class="text-xl font-bold text-green-600">
+            {{ formatCurrency(totalReceitas()) }}
+          </h3>
+        </div>
+        <div class="bg-green-100 p-3 rounded-lg">
+          <lucide-icon [img]="TrendingUpIcon" [size]="20" class="text-green-600"></lucide-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Despesas -->
+    <div class="card-base border-l-4 border-red-500">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm text-gray-600 font-medium mb-1">Total Despesas</p>
+          <h3 class="text-xl font-bold text-red-600">
+            {{ formatCurrency(totalDespesas()) }}
+          </h3>
+        </div>
+        <div class="bg-red-100 p-3 rounded-lg">
+          <lucide-icon [img]="TrendingDownIcon" [size]="20" class="text-red-600"></lucide-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saldo do Período -->
+    <div class="card-base border-l-4 border-blue-500">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-sm text-gray-600 font-medium mb-1">Saldo do Período</p>
+          <h3
+            class="text-xl font-bold"
+            [class.text-green-600]="saldoPeriodo() >= 0"
+            [class.text-red-600]="saldoPeriodo() < 0"
+          >
+            {{ formatCurrency(saldoPeriodo()) }}
+          </h3>
+        </div>
+        <div class="bg-blue-100 p-3 rounded-lg">
+          <lucide-icon [img]="DollarSignIcon" [size]="20" class="text-blue-600"></lucide-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card-base mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Filtros</h3>
+      <button
+        (click)="toggleFilters()"
+        class="text-sm text-primary hover:underline flex items-center gap-1"
+      >
+        <lucide-icon [img]="FilterIcon" [size]="16"></lucide-icon>
+        <span>{{ showFilters() ? 'Ocultar' : 'Exibir' }}</span>
+      </button>
+    </div>
+
+    <!-- Botões de Filtro Rápido -->
+    <div class="flex flex-wrap gap-2">
+      <button
+        (click)="clearFilters()"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        [class.bg-primary]="!filters().tipo"
+        [class.text-white]="!filters().tipo"
+        [class.bg-gray-100]="filters().tipo"
+        [class.text-gray-700]="filters().tipo"
+      >
+        Todas
+      </button>
+
+      <button
+        (click)="applyFilters('receita')"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        [class.bg-green-500]="filters().tipo === 'receita'"
+        [class.text-white]="filters().tipo === 'receita'"
+        [class.bg-gray-100]="filters().tipo !== 'receita'"
+        [class.text-gray-700]="filters().tipo !== 'receita'"
+      >
+        Receitas
+      </button>
+
+      <button
+        (click)="applyFilters('despesa')"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        [class.bg-red-500]="filters().tipo === 'despesa'"
+        [class.text-white]="filters().tipo === 'despesa'"
+        [class.bg-gray-100]="filters().tipo !== 'despesa'"
+        [class.text-gray-700]="filters().tipo !== 'despesa'"
+      >
+        Despesas
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  } @else {
+    <!-- Tabela de Transações -->
+    @if (transactions().length === 0) {
+      <div class="card-base text-center py-12">
+        <lucide-icon [img]="CalendarIcon" [size]="48" class="text-gray-300 mx-auto mb-3"></lucide-icon>
+        <p class="text-gray-500">Nenhuma transação encontrada</p>
+        <p class="text-sm text-gray-400 mt-1">
+          Comece adicionando suas receitas e despesas
+        </p>
+      </div>
+    } @else {
+      <div class="card-base overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Data</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Descrição</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Categoria</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Conta</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tipo</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (transaction of transactions(); track transaction.id) {
+              <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4 text-sm text-gray-600">
+                  {{ formatDate(transaction.data) }}
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-900 font-medium">
+                  {{ transaction.descricao }}
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600">
+                  <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+                    {{ transaction.categoria }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600">
+                  {{ transaction.conta_bancaria || '-' }}
+                </td>
+                <td class="py-3 px-4">
+                  <span
+                    class="px-2 py-1 rounded-full text-xs font-medium border"
+                    [class]="getTypeBadgeClass(transaction.tipo)"
+                  >
+                    {{ transaction.tipo === 'receita' ? 'Receita' : 'Despesa' }}
+                  </span>
+                </td>
+                <td
+                  class="py-3 px-4 text-sm font-semibold text-right"
+                  [class.text-green-600]="transaction.tipo === 'receita'"
+                  [class.text-red-600]="transaction.tipo === 'despesa'"
+                >
+                  {{ formatCurrency(transaction.valor) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Paginação -->
+        @if (pagination().total > pagination().limit) {
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <p class="text-sm text-gray-600">
+              Exibindo {{ pagination().offset + 1 }} -
+              {{ Math.min(pagination().offset + pagination().limit, pagination().total) }}
+              de {{ pagination().total }} transações
+            </p>
+
+            <div class="flex gap-2">
+              <button
+                (click)="previousPage()"
+                [disabled]="pagination().offset === 0"
+                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+
+              <button
+                (click)="nextPage()"
+                [disabled]="!pagination().has_more"
+                class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

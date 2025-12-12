@@ -1,0 +1,26 @@
+// Accounts Component Styles
+
+// Card hover effects
+.card-base {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+// Smooth transitions
+button {
+  transition: all 0.2s ease;
+}
+
+// Mobile adjustments
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .grid {
+    gap: 1rem;
+  }
+}
