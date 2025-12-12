@@ -123,14 +123,4 @@ export class AccountsComponent implements OnInit {
     };
     return labels[tipo] || tipo;
   }
-
-  /**
-   * Obter cor de fundo do card baseado na cor da conta
-   */
-  getCardGradient(cor?: string): string {
-    if (!cor) return 'from-blue-500 to-blue-600';
-
-    // Converter hex para gradient
-    return `from-[${cor}] to-[${cor}dd]`;
-  }
 }

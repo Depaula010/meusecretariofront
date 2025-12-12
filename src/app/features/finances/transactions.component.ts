@@ -38,6 +38,9 @@ export class TransactionsComponent implements OnInit {
   CalendarIcon = Calendar;
   DollarSignIcon = DollarSign;
 
+  // Math para usar no template
+  Math = Math;
+
   // Signals de Estado
   loading = signal(true);
   error = signal<string | null>(null);
