@@ -1,11 +1,11 @@
 {
-  "api": {
+  "/api": {
     "target": "[http://212.47.65.37](http://212.47.65.37)",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
-  "auth": {
+  "/auth": {
     "target": "[http://212.47.65.37](http://212.47.65.37)",
     "secure": false,
     "changeOrigin": true,
