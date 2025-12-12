@@ -1,5 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Auth Guard
@@ -11,13 +12,13 @@ import { Router, CanActivateFn } from '@angular/router';
  */
 export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
 
-  // TODO: Implementar verificação real de autenticação
-  // Por enquanto, verifica se há token no localStorage
-  const token = localStorage.getItem('meusecretario_token');
+  // Verificar se há token válido
+  const token = authService.getToken();
 
   if (!token) {
-    // Redirecionar para login
+    // Redirecionar para login com returnUrl
     router.navigate(['/auth/login'], {
       queryParams: { returnUrl: state.url }
     });
@@ -35,8 +36,10 @@ export const authGuard: CanActivateFn = (route, state) => {
  */
 export const publicGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
 
-  const token = localStorage.getItem('meusecretario_token');
+  // Verificar se há token válido
+  const token = authService.getToken();
 
   if (token) {
     // Já está autenticado, redirecionar para dashboard

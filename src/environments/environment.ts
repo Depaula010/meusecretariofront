@@ -2,12 +2,13 @@
  * Environment de Desenvolvimento
  *
  * Configurações para ambiente local de desenvolvimento.
- * A API deve estar rodando em http://localhost:5000
+ * Aponta para a API remota em produção durante o desenvolvimento.
+ * Para usar API local, altere apiUrl para 'http://localhost:5000'
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000',
-  apiPrefix: '/api',
+  apiUrl: 'http://212.47.65.37',
+  apiPrefix: '',
   appName: 'Meu Secretário',
   version: '1.0.0',
 

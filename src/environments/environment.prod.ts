@@ -2,12 +2,12 @@
  * Environment de Produção
  *
  * Configurações para ambiente de produção.
- * A API será acessada via proxy reverso do Nginx (/api)
+ * Aponta para a API de produção.
  */
 export const environment = {
   production: true,
-  apiUrl: '', // Vazio porque usaremos proxy reverso do Nginx
-  apiPrefix: '/api',
+  apiUrl: 'http://212.47.65.37',
+  apiPrefix: '',
   appName: 'Meu Secretário',
   version: '1.0.0',
 
