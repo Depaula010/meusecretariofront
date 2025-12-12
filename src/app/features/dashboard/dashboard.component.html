@@ -1,9 +1,26 @@
 <div class="max-w-7xl mx-auto w-full">
   <!-- Header -->
   <div class="mb-6 md:mb-8">
-    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">Dashboard</h1>
-    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">
+      Olá, {{ userName() }}! 👋
+    </h1>
+    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">
+      Bem-vindo de volta! Aqui está um resumo das suas finanças.
+    </p>
   </div>
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-sm text-red-700">{{ error() }}</p>
+      <button
+        (click)="loadDashboardData()"
+        class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  }
 
   <!-- Loading State -->
   @if (loading()) {

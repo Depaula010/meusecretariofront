@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal, computed, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
@@ -9,6 +9,9 @@ import {
   Calendar,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
+import { AuthService } from '../../core/services/auth.service';
+import { DashboardService } from './services/dashboard.service';
+import { DashboardSummary, DashboardCharts, RecentTransaction } from './models/dashboard.model';
 
 // Registrar componentes do Chart.js
 Chart.register(...registerables);
@@ -66,36 +69,49 @@ export class DashboardComponent implements OnInit, AfterViewInit {
    * Loading state
    */
   loading = signal(true);
+  error = signal<string | null>(null);
 
   /**
-   * Dados de KPIs
+   * Dados do Summary (Backend)
    */
-  kpis = signal<KPICard[]>([
-    {
-      title: 'Saldo Atual',
-      value: 'R$ 12.450,00',
-      change: '+12.5%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'text-green-600'
-    },
-    {
-      title: 'Receitas do Mês',
-      value: 'R$ 8.500,00',
-      change: '+8.2%',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Despesas do Mês',
-      value: 'R$ 6.200,00',
-      change: '-3.1%',
-      trend: 'down',
-      icon: TrendingDown,
-      color: 'text-red-600'
+  summary = signal<DashboardSummary | null>(null);
+
+  /**
+   * Dados de KPIs (Computados a partir do Summary)
+   */
+  kpis = computed<KPICard[]>(() => {
+    const data = this.summary();
+    if (!data) {
+      return [];
     }
-  ]);
+
+    return [
+      {
+        title: 'Saldo Atual',
+        value: this.formatCurrency(data.saldo_atual),
+        change: '+0%', // TODO: Calcular variação se backend fornecer
+        trend: data.saldo_atual >= 0 ? 'up' : 'down',
+        icon: DollarSign,
+        color: data.saldo_atual >= 0 ? 'text-green-600' : 'text-red-600'
+      },
+      {
+        title: 'Receitas do Mês',
+        value: this.formatCurrency(data.total_receitas),
+        change: '+0%',
+        trend: 'up',
+        icon: TrendingUp,
+        color: 'text-blue-600'
+      },
+      {
+        title: 'Despesas do Mês',
+        value: this.formatCurrency(data.total_despesas),
+        change: '-0%',
+        trend: 'down',
+        icon: TrendingDown,
+        color: 'text-red-600'
+      }
+    ];
+  });
 
   /**
    * Alertas financeiros
@@ -125,11 +141,21 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   ]);
 
   /**
-   * Dados para o gráfico de evolução
+   * Dados de Gráficos (Backend)
    */
-  balanceData = signal({
-    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-    values: [10000, 10500, 11200, 10800, 11500, 12450]
+  charts = signal<DashboardCharts | null>(null);
+
+  /**
+   * Transações Recentes (Backend)
+   */
+  recentTransactions = signal<RecentTransaction[]>([]);
+
+  /**
+   * Nome do usuário (do AuthService)
+   */
+  userName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.nome || 'Usuário';
   });
 
   // ==========================================
@@ -152,18 +178,23 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   });
 
+  constructor(
+    public authService: AuthService,
+    private dashboardService: DashboardService
+  ) {}
+
   // ==========================================
   // Lifecycle Hooks
   // ==========================================
 
   ngOnInit(): void {
-    // Simular carregamento de dados
+    // Carregar dados do backend
     this.loadDashboardData();
   }
 
   ngAfterViewInit(): void {
     // Inicializar gráfico após view estar pronta
-    this.initChart();
+    // (será chamado após os dados serem carregados)
   }
 
   // ==========================================
@@ -171,13 +202,46 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // ==========================================
 
   /**
-   * Carregar dados do dashboard
+   * Carregar dados do dashboard (Summary, Charts, Transactions)
    */
   loadDashboardData(): void {
-    // TODO: Substituir por chamada real à API
-    setTimeout(() => {
-      this.loading.set(false);
-    }, 1000);
+    this.loading.set(true);
+    this.error.set(null);
+
+    // Carregar Summary (KPIs)
+    this.dashboardService.getSummary().subscribe({
+      next: (data) => {
+        this.summary.set(data);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar summary:', err);
+        this.error.set('Erro ao carregar resumo financeiro.');
+      }
+    });
+
+    // Carregar Charts
+    this.dashboardService.getCharts().subscribe({
+      next: (data) => {
+        this.charts.set(data);
+        // Inicializar gráfico após receber dados
+        setTimeout(() => this.initChart(), 100);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar charts:', err);
+      }
+    });
+
+    // Carregar Transações Recentes
+    this.dashboardService.getRecentTransactions().subscribe({
+      next: (data) => {
+        this.recentTransactions.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar transações:', err);
+        this.loading.set(false);
+      }
+    });
   }
 
   /**
@@ -189,7 +253,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     const ctx = this.balanceChartRef.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const data = this.balanceData();
+    const chartsData = this.charts();
+    if (!chartsData) return;
+
+    // Destruir gráfico anterior se existir
+    if (this.chart) {
+      this.chart.destroy();
+    }
+
+    const data = chartsData.evolucao_saldo;
 
     this.chart = new Chart(ctx, {
       type: 'line',
@@ -197,7 +269,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         labels: data.labels,
         datasets: [{
           label: 'Saldo',
-          data: data.values,
+          data: data.valores,
           borderColor: '#3B82F6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.4,
@@ -275,6 +347,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (diff > 0) return `Em ${diff} dias`;
     if (diff === -1) return 'Ontem';
     return `Há ${Math.abs(diff)} dias`;
+  }
+
+  /**
+   * Formatar valor monetário (R$ 1.234,56)
+   */
+  formatCurrency(value: number): string {
+    return value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
   }
 
   /**

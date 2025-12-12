@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -9,7 +9,9 @@ import {
   Bell,
   User,
   ChevronDown,
+  LogOut,
 } from 'lucide-angular';
+import { AuthService } from '../../core/services/auth.service';
 
 /**
  * Header Component
@@ -94,12 +96,13 @@ import {
                   Configurações
                 </a>
                 <hr class="my-2 border-gray-200" />
-                <a
-                  href="#"
-                  class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                <button
+                  (click)="logout()"
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                 >
+                  <lucide-icon [img]="LogOutIcon" [size]="16"></lucide-icon>
                   Sair
-                </a>
+                </button>
               </div>
             }
           </div>
@@ -117,13 +120,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
   BellIcon = Bell;
   UserIcon = User;
   ChevronDownIcon = ChevronDown;
+  LogOutIcon = LogOut;
 
   // Signals
   isUserMenuOpen = signal(false);
   pageTitle = signal('Dashboard');
   notificationCount = signal(3);
-  userName = signal('Usuário Demo');
-  userPlan = signal('Plano Prata');
+
+  // Dados do usuário (do AuthService)
+  userName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.nome || 'Usuário';
+  });
+  userPlan = signal('Plano Free'); // TODO: Conectar com backend quando houver
 
   // Subscription para limpar no destroy
   private routerSubscription?: Subscription;
@@ -138,7 +147,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     '/subscription': 'Assinatura',
   };
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    public authService: AuthService
+  ) {}
 
   ngOnInit() {
     // Atualizar título na inicialização
@@ -178,5 +190,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
    */
   toggleUserMenu() {
     this.isUserMenuOpen.update(value => !value);
+  }
+
+  /**
+   * Realizar logout
+   */
+  logout() {
+    this.authService.logout();
+    this.isUserMenuOpen.set(false);
   }
 }
