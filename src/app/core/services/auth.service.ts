@@ -1,8 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   User,
@@ -149,6 +149,34 @@ export class AuthService {
   }
 
   /**
+   * Verifica se o token atual é válido com o backend
+   */
+  verifyToken(): Observable<boolean> {
+    const token = this.getToken();
+    if (!token) {
+      return of(false);
+    }
+
+    return this.http.post<{ status: string; valid?: boolean; user_id?: number }>(
+      `${this.API_URL}/auth/verify`,
+      { token }
+    ).pipe(
+      map(response => {
+        if (response.status === 'success' && response.valid) {
+          return true;
+        }
+        this.logout();
+        return false;
+      }),
+      catchError(() => {
+        // Se falhar verificação, não faz logout automático
+        // Deixa o interceptor lidar com 401
+        return of(false);
+      })
+    );
+  }
+
+  /**
    * Obtém os dados do usuário atual
    */
   getCurrentUser(): User | null {
@@ -193,6 +221,10 @@ export class AuthService {
         errorMessage = 'WhatsApp ou senha incorretos.';
       } else if (error.status === 400) {
         errorMessage = error.error?.message || 'Dados inválidos. Verifique os campos.';
+      } else if (error.status === 403) {
+        errorMessage = 'Acesso negado. Permissão insuficiente.';
+      } else if (error.status === 404) {
+        errorMessage = 'Usuário não encontrado.';
       } else if (error.status === 409) {
         errorMessage = 'Este WhatsApp já está cadastrado.';
       } else if (error.status >= 500) {

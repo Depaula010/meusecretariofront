@@ -13,16 +13,18 @@ import {
   BankAccountRequest,
   BankAccountsResponse,
   BankAccountCreateResponse,
+  Category,
+  CategoriesResponse,
 } from '../models/finances.model';
 
 /**
  * Finances Service
  *
  * Serviço responsável por gerenciar transações e contas bancárias:
- * - GET /api/finances/transactions - Lista transações com filtros
- * - POST /api/finances/transactions - Cria nova transação
- * - GET /api/finances/accounts - Lista contas bancárias
- * - POST /api/finances/accounts - Cria nova conta bancária
+ * - GET /api/transactions - Lista transações com filtros
+ * - POST /api/transactions - Cria nova transação
+ * - GET /api/accounts - Lista contas bancárias
+ * - POST /api/accounts - Cria nova conta bancária
  *
  * Todos os endpoints exigem autenticação (token JWT via interceptor)
  */
@@ -41,7 +43,7 @@ export class FinancesService {
   /**
    * Obtém lista de transações com filtros opcionais
    *
-   * Endpoint: GET /api/finances/transactions
+   * Endpoint: GET /api/transactions
    *
    * @param filters - Filtros opcionais (tipo, categoria, período, paginação)
    * @returns Observable com array de transações e paginação
@@ -59,7 +61,7 @@ export class FinancesService {
     }
 
     return this.http
-      .get<TransactionsResponse>(`${this.API_URL}/api/finances/transactions`, { params })
+      .get<TransactionsResponse>(`${this.API_URL}/api/transactions`, { params })
       .pipe(
         map((response) => {
           if (response.status === 'success') {
@@ -74,14 +76,14 @@ export class FinancesService {
   /**
    * Cria nova transação (receita ou despesa)
    *
-   * Endpoint: POST /api/finances/transactions
+   * Endpoint: POST /api/transactions
    *
    * @param transaction - Dados da transação
    * @returns Observable com transação criada
    */
   createTransaction(transaction: TransactionRequest): Observable<Transaction> {
     return this.http
-      .post<TransactionCreateResponse>(`${this.API_URL}/api/finances/transactions`, transaction)
+      .post<TransactionCreateResponse>(`${this.API_URL}/api/transactions`, transaction)
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
@@ -96,7 +98,7 @@ export class FinancesService {
   /**
    * Atualiza transação existente
    *
-   * Endpoint: PUT /api/finances/transactions/:id
+   * Endpoint: PUT /api/transactions/:id
    *
    * @param id - ID da transação
    * @param transaction - Dados atualizados
@@ -104,7 +106,7 @@ export class FinancesService {
    */
   updateTransaction(id: number, transaction: Partial<TransactionRequest>): Observable<Transaction> {
     return this.http
-      .put<TransactionCreateResponse>(`${this.API_URL}/api/finances/transactions/${id}`, transaction)
+      .put<TransactionCreateResponse>(`${this.API_URL}/api/transactions/${id}`, transaction)
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
@@ -119,14 +121,14 @@ export class FinancesService {
   /**
    * Deleta transação
    *
-   * Endpoint: DELETE /api/finances/transactions/:id
+   * Endpoint: DELETE /api/transactions/:id
    *
    * @param id - ID da transação
    * @returns Observable void
    */
   deleteTransaction(id: number): Observable<void> {
     return this.http
-      .delete<{ status: string; message?: string }>(`${this.API_URL}/api/finances/transactions/${id}`)
+      .delete<{ status: string; message?: string }>(`${this.API_URL}/api/transactions/${id}`)
       .pipe(
         map((response) => {
           if (response.status === 'success') {
@@ -145,13 +147,13 @@ export class FinancesService {
   /**
    * Obtém lista de contas bancárias
    *
-   * Endpoint: GET /api/finances/accounts
+   * Endpoint: GET /api/accounts
    *
    * @returns Observable com array de contas bancárias
    */
   getAccounts(): Observable<BankAccount[]> {
     return this.http
-      .get<BankAccountsResponse>(`${this.API_URL}/api/finances/accounts`)
+      .get<BankAccountsResponse>(`${this.API_URL}/api/accounts`)
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
@@ -166,14 +168,14 @@ export class FinancesService {
   /**
    * Cria nova conta bancária
    *
-   * Endpoint: POST /api/finances/accounts
+   * Endpoint: POST /api/accounts
    *
    * @param account - Dados da conta
    * @returns Observable com conta criada
    */
   createAccount(account: BankAccountRequest): Observable<BankAccount> {
     return this.http
-      .post<BankAccountCreateResponse>(`${this.API_URL}/api/finances/accounts`, account)
+      .post<BankAccountCreateResponse>(`${this.API_URL}/api/accounts`, account)
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
@@ -188,7 +190,7 @@ export class FinancesService {
   /**
    * Atualiza conta bancária
    *
-   * Endpoint: PUT /api/finances/accounts/:id
+   * Endpoint: PUT /api/accounts/:id
    *
    * @param id - ID da conta
    * @param account - Dados atualizados
@@ -196,7 +198,7 @@ export class FinancesService {
    */
   updateAccount(id: number, account: Partial<BankAccountRequest>): Observable<BankAccount> {
     return this.http
-      .put<BankAccountCreateResponse>(`${this.API_URL}/api/finances/accounts/${id}`, account)
+      .put<BankAccountCreateResponse>(`${this.API_URL}/api/accounts/${id}`, account)
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
@@ -211,20 +213,51 @@ export class FinancesService {
   /**
    * Deleta conta bancária
    *
-   * Endpoint: DELETE /api/finances/accounts/:id
+   * Endpoint: DELETE /api/accounts/:id
    *
    * @param id - ID da conta
    * @returns Observable void
    */
   deleteAccount(id: number): Observable<void> {
     return this.http
-      .delete<{ status: string; message?: string }>(`${this.API_URL}/api/finances/accounts/${id}`)
+      .delete<{ status: string; message?: string }>(`${this.API_URL}/api/accounts/${id}`)
       .pipe(
         map((response) => {
           if (response.status === 'success') {
             return;
           }
           throw new Error(response.message || 'Erro ao deletar conta');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==========================================
+  // CATEGORIAS
+  // ==========================================
+
+  /**
+   * Obtém lista de categorias do backend
+   *
+   * Endpoint: GET /api/categories?tipo=Receita|Despesa
+   *
+   * @param tipo - Filtrar por tipo: 'Receita' ou 'Despesa'
+   * @returns Observable com array de categorias
+   */
+  getCategories(tipo?: 'Receita' | 'Despesa'): Observable<Category[]> {
+    let params = new HttpParams();
+    if (tipo) {
+      params = params.set('tipo', tipo);
+    }
+
+    return this.http
+      .get<CategoriesResponse>(`${this.API_URL}/api/categories`, { params })
+      .pipe(
+        map((response) => {
+          if (response.status === 'success' && response.data) {
+            return response.data;
+          }
+          throw new Error(response.message || 'Erro ao carregar categorias');
         }),
         catchError(this.handleError)
       );

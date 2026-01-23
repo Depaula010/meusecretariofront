@@ -25,11 +25,12 @@ export interface Transaction {
 export interface TransactionRequest {
   descricao: string;
   valor: number;
-  tipo: 'receita' | 'despesa';
-  categoria: string;
+  tipo: 'Receita' | 'Despesa';
   data: string;
-  conta_bancaria_id: number;
+  subcategoria_id: number;
+  conta_id: number;
   observacoes?: string;
+  consolidada?: boolean;
 }
 
 /**
@@ -129,4 +130,35 @@ export interface TransactionStats {
   total_despesas: number;
   saldo_periodo: number;
   quantidade_transacoes: number;
+}
+
+// ==========================================
+// CATEGORIAS (do backend)
+// ==========================================
+
+/**
+ * Subcategoria
+ */
+export interface SubCategory {
+  id: number;
+  nome: string;
+}
+
+/**
+ * Categoria com macro e subcategorias
+ */
+export interface Category {
+  grupo: string;
+  macro_id: number;
+  macro_categoria: string;
+  subcategorias: SubCategory[];
+}
+
+/**
+ * Response da API - Lista de Categorias
+ */
+export interface CategoriesResponse {
+  status: 'success' | 'error';
+  data?: Category[];
+  message?: string;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -9,9 +9,14 @@ import {
   Plus,
   Calendar,
   DollarSign,
+  Pencil,
+  Trash2,
 } from 'lucide-angular';
 import { FinancesService } from './services/finances.service';
 import { Transaction, TransactionFilters } from './models/finances.model';
+import { TransactionModalComponent } from './components/transaction-modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { finalize } from 'rxjs/operators';
 
 /**
  * Transactions Component
@@ -25,11 +30,21 @@ import { Transaction, TransactionFilters } from './models/finances.model';
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule,
+    TransactionModalComponent,
+    ConfirmDialogComponent
+  ],
   templateUrl: './transactions.component.html',
   styleUrls: ['./transactions.component.scss']
 })
 export class TransactionsComponent implements OnInit {
+  // ViewChild para modais
+  @ViewChild('transactionModal') transactionModal!: TransactionModalComponent;
+  @ViewChild('confirmDialog') confirmDialog!: ConfirmDialogComponent;
+
   // Ícones
   TrendingUpIcon = TrendingUp;
   TrendingDownIcon = TrendingDown;
@@ -37,6 +52,12 @@ export class TransactionsComponent implements OnInit {
   PlusIcon = Plus;
   CalendarIcon = Calendar;
   DollarSignIcon = DollarSign;
+  PencilIcon = Pencil;
+  TrashIcon = Trash2;
+
+  // Estado para edição/exclusão
+  selectedTransaction = signal<Transaction | null>(null);
+  transactionToDelete = signal<Transaction | null>(null);
 
   // Math para usar no template
   Math = Math;
@@ -187,5 +208,63 @@ export class TransactionsComponent implements OnInit {
       }));
       this.loadTransactions();
     }
+  }
+
+  // ==========================================
+  // CRUD OPERATIONS
+  // ==========================================
+
+  /**
+   * Abre modal para criar nova transação
+   */
+  openNewTransaction(tipo?: 'receita' | 'despesa'): void {
+    this.selectedTransaction.set(null);
+    this.transactionModal.open(tipo);
+  }
+
+  /**
+   * Abre modal para editar transação existente
+   */
+  editTransaction(transaction: Transaction): void {
+    this.selectedTransaction.set(transaction);
+    this.transactionModal.open();
+  }
+
+  /**
+   * Abre dialog de confirmação para deletar
+   */
+  confirmDelete(transaction: Transaction): void {
+    this.transactionToDelete.set(transaction);
+    this.confirmDialog.open();
+  }
+
+  /**
+   * Deleta transação após confirmação
+   */
+  deleteTransaction(): void {
+    const transaction = this.transactionToDelete();
+    if (!transaction) return;
+
+    this.loading.set(true);
+    this.financesService.deleteTransaction(transaction.id).pipe(
+      finalize(() => {
+        this.loading.set(false);
+        this.transactionToDelete.set(null);
+      })
+    ).subscribe({
+      next: () => {
+        this.loadTransactions();
+      },
+      error: (err) => {
+        this.error.set(err.message || 'Erro ao excluir transação');
+      }
+    });
+  }
+
+  /**
+   * Callback quando transação é salva (criar ou editar)
+   */
+  onTransactionSaved(transaction: Transaction): void {
+    this.loadTransactions();
   }
 }

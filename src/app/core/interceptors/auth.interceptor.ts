@@ -19,6 +19,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Obter token do localStorage
   const token = localStorage.getItem(TOKEN_KEY);
 
+  // DEBUG: Verificar token e requisição
+  console.log('[AUTH INTERCEPTOR] URL:', req.url);
+  console.log('[AUTH INTERCEPTOR] Token presente:', !!token);
+  if (token) {
+    console.log('[AUTH INTERCEPTOR] Token (primeiros 20 chars):', token.substring(0, 20) + '...');
+  }
+
   // Clonar a requisição e adicionar o header Authorization se houver token
   let authReq = req;
   if (token) {
@@ -27,6 +34,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`
       }
     });
+    console.log('[AUTH INTERCEPTOR] Header Authorization adicionado');
+  } else {
+    console.warn('[AUTH INTERCEPTOR] ⚠️ NENHUM TOKEN ENCONTRADO! Requisição sem autenticação.');
   }
 
   // Enviar a requisição e tratar erros
