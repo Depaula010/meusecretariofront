@@ -232,7 +232,7 @@ import { finalize } from 'rxjs/operators';
                   @if (isFieldInvalid('subcategoria_id')) {
                     <p class="mt-1 text-xs text-red-600">Subcategoria é obrigatória</p>
                   }
-                }
+                </div>
               }
 
               <!-- Conta Bancária -->

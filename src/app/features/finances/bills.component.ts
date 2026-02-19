@@ -87,7 +87,7 @@ export class BillsComponent implements OnInit {
       next: (bills) => this.bills.set(bills),
       error: (err) => {
         console.error('Erro ao carregar contas mensais:', err);
-        this.error.set('Erro ao carregar contas mensais. Tente novamente.');
+        this.error.set(err.message || 'Erro ao carregar contas mensais. Tente novamente.');
       }
     });
   }
