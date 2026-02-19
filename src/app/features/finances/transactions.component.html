@@ -109,23 +109,23 @@
       </button>
 
       <button
-        (click)="applyFilters('receita')"
+        (click)="applyFilters('Receita')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        [class.bg-green-500]="filters().tipo === 'receita'"
-        [class.text-white]="filters().tipo === 'receita'"
-        [class.bg-gray-100]="filters().tipo !== 'receita'"
-        [class.text-gray-700]="filters().tipo !== 'receita'"
+        [class.bg-green-500]="filters().tipo === 'Receita'"
+        [class.text-white]="filters().tipo === 'Receita'"
+        [class.bg-gray-100]="filters().tipo !== 'Receita'"
+        [class.text-gray-700]="filters().tipo !== 'Receita'"
       >
         Receitas
       </button>
 
       <button
-        (click)="applyFilters('despesa')"
+        (click)="applyFilters('Despesa')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        [class.bg-red-500]="filters().tipo === 'despesa'"
-        [class.text-white]="filters().tipo === 'despesa'"
-        [class.bg-gray-100]="filters().tipo !== 'despesa'"
-        [class.text-gray-700]="filters().tipo !== 'despesa'"
+        [class.bg-red-500]="filters().tipo === 'Despesa'"
+        [class.text-white]="filters().tipo === 'Despesa'"
+        [class.bg-gray-100]="filters().tipo !== 'Despesa'"
+        [class.text-gray-700]="filters().tipo !== 'Despesa'"
       >
         Despesas
       </button>
@@ -183,13 +183,13 @@
                     class="px-2 py-1 rounded-full text-xs font-medium border"
                     [class]="getTypeBadgeClass(transaction.tipo)"
                   >
-                    {{ transaction.tipo === 'receita' ? 'Receita' : 'Despesa' }}
+                    {{ transaction.tipo === 'Receita' ? 'Receita' : 'Despesa' }}
                   </span>
                 </td>
                 <td
                   class="py-3 px-4 text-sm font-semibold text-right"
-                  [class.text-green-600]="transaction.tipo === 'receita'"
-                  [class.text-red-600]="transaction.tipo === 'despesa'"
+                  [class.text-green-600]="transaction.tipo === 'Receita'"
+                  [class.text-red-600]="transaction.tipo === 'Despesa'"
                 >
                   {{ formatCurrency(transaction.valor) }}
                 </td>

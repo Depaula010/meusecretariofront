@@ -11,9 +11,9 @@ export interface Transaction {
   id: number;
   descricao: string;
   valor: number;
-  tipo: 'receita' | 'despesa';
+  tipo: 'Receita' | 'Despesa'; // Alterado de 'receita' | 'despesa'
   categoria: string;
-  data: string; // ISO 8601 format (YYYY-MM-DD)
+  data: string; 
   conta_bancaria?: string;
   conta_bancaria_id?: number;
   observacoes?: string;
@@ -37,7 +37,7 @@ export interface TransactionRequest {
  * Filtros para busca de transações
  */
 export interface TransactionFilters {
-  tipo?: 'receita' | 'despesa';
+  tipo?: 'Receita' | 'Despesa'; // Alterado de 'receita' | 'despesa'
   categoria?: string;
   data_inicio?: string;
   data_fim?: string;
@@ -160,5 +160,62 @@ export interface Category {
 export interface CategoriesResponse {
   status: 'success' | 'error';
   data?: Category[];
+  message?: string;
+}
+
+// ==========================================
+// CONTAS MENSAIS (AGENDAMENTOS)
+// ==========================================
+
+/**
+ * Conta Mensal / Agendamento (água, luz, internet, etc.)
+ */
+export interface ScheduledBill {
+  id: number;
+  descricao: string;
+  valor_previsto?: number;
+  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
+  periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
+  dia_execucao: number;
+  mes_execucao?: number;
+  notificar_antes_dias: number;
+  subcategoria_id: number;
+  subcategoria_nome?: string;
+  conta_id: number;
+  conta_nome?: string;
+  data_inicio: string;
+}
+
+/**
+ * Request para criar/editar conta mensal
+ */
+export interface ScheduledBillRequest {
+  descricao: string;
+  valor_previsto?: number;
+  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
+  periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
+  dia_execucao: number;
+  mes_execucao?: number;
+  notificar_antes_dias?: number;
+  subcategoria_id: number;
+  conta_id: number;
+  data_inicio: string;
+}
+
+/**
+ * Response da API - Lista de Contas Mensais
+ */
+export interface BillsResponse {
+  status: 'success' | 'error';
+  data?: ScheduledBill[];
+  message?: string;
+}
+
+/**
+ * Response da API - Criar/Atualizar Conta Mensal
+ */
+export interface BillCreateResponse {
+  status: 'success' | 'error';
+  data?: ScheduledBill;
   message?: string;
 }

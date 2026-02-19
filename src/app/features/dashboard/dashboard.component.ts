@@ -181,7 +181,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   constructor(
     public authService: AuthService,
     private dashboardService: DashboardService
-  ) {}
+  ) { }
 
   // ==========================================
   // Lifecycle Hooks
@@ -254,7 +254,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (!ctx) return;
 
     const chartsData = this.charts();
-    if (!chartsData) return;
+
+    // Verificação crucial: garante que chartsData e evolucao_saldo existam
+    if (!chartsData || !chartsData.evolucao_saldo) {
+      console.warn('Dados de evolução de saldo ainda não disponíveis para o gráfico.');
+      return;
+    }
 
     // Destruir gráfico anterior se existir
     if (this.chart) {
@@ -352,8 +357,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   /**
    * Formatar valor monetário (R$ 1.234,56)
    */
-  formatCurrency(value: number): string {
-    return value.toLocaleString('pt-BR', {
+  formatCurrency(value: number | undefined | null): string {
+    // Se o valor não existir, retorna R$ 0,00 ou string vazia
+    const safeValue = value ?? 0;
+
+    return safeValue.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });

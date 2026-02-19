@@ -15,6 +15,10 @@ import {
   BankAccountCreateResponse,
   Category,
   CategoriesResponse,
+  ScheduledBill,
+  ScheduledBillRequest,
+  BillsResponse,
+  BillCreateResponse,
 } from '../models/finances.model';
 
 /**
@@ -258,6 +262,86 @@ export class FinancesService {
             return response.data;
           }
           throw new Error(response.message || 'Erro ao carregar categorias');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==========================================
+  // CONTAS MENSAIS (AGENDAMENTOS)
+  // ==========================================
+
+  /**
+   * Obtém lista de contas mensais do usuário
+   *
+   * Endpoint: GET /api/bills
+   */
+  getBills(): Observable<ScheduledBill[]> {
+    return this.http
+      .get<BillsResponse>(`${this.API_URL}/api/bills`)
+      .pipe(
+        map((response) => {
+          if (response.status === 'success' && response.data) {
+            return response.data;
+          }
+          throw new Error(response.message || 'Erro ao carregar contas mensais');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Cria nova conta mensal
+   *
+   * Endpoint: POST /api/bills
+   */
+  createBill(bill: ScheduledBillRequest): Observable<ScheduledBill> {
+    return this.http
+      .post<BillCreateResponse>(`${this.API_URL}/api/bills`, bill)
+      .pipe(
+        map((response) => {
+          if (response.status === 'success' && response.data) {
+            return response.data;
+          }
+          throw new Error(response.message || 'Erro ao criar conta mensal');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Atualiza conta mensal existente
+   *
+   * Endpoint: PUT /api/bills/:id
+   */
+  updateBill(id: number, bill: Partial<ScheduledBillRequest>): Observable<ScheduledBill> {
+    return this.http
+      .put<BillCreateResponse>(`${this.API_URL}/api/bills/${id}`, bill)
+      .pipe(
+        map((response) => {
+          if (response.status === 'success' && response.data) {
+            return response.data;
+          }
+          throw new Error(response.message || 'Erro ao atualizar conta mensal');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Remove (soft delete) conta mensal
+   *
+   * Endpoint: DELETE /api/bills/:id
+   */
+  deleteBill(id: number): Observable<void> {
+    return this.http
+      .delete<{ status: string; message?: string }>(`${this.API_URL}/api/bills/${id}`)
+      .pipe(
+        map((response) => {
+          if (response.status === 'success') {
+            return;
+          }
+          throw new Error(response.message || 'Erro ao remover conta mensal');
         }),
         catchError(this.handleError)
       );

@@ -1,0 +1,201 @@
+<div class="max-w-7xl mx-auto w-full">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Contas Mensais</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        Gerencie suas contas fixas e recorrentes
+      </p>
+    </div>
+
+    <button (click)="openCreateModal()" class="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
+      <lucide-icon [img]="PlusIcon" [size]="18"></lucide-icon>
+      <span>Nova Conta</span>
+    </button>
+  </div>
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-sm text-red-700">{{ error() }}</p>
+      <button
+        (click)="loadBills()"
+        class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  <!-- Card de Resumo -->
+  <div class="card-base bg-gradient-to-br from-primary to-secondary text-white mb-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-sm opacity-90 mb-1">Gasto Mensal Estimado</p>
+        <h2 class="text-3xl font-bold">
+          {{ formatCurrency(totalMensalEstimado()) }}
+        </h2>
+        <p class="text-xs opacity-80 mt-2">
+          {{ bills().length }} conta{{ bills().length !== 1 ? 's' : '' }} cadastrada{{ bills().length !== 1 ? 's' : '' }}
+        </p>
+      </div>
+      <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+        <lucide-icon [img]="ReceiptIcon" [size]="28"></lucide-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  } @else {
+    @if (bills().length === 0) {
+      <!-- Empty State -->
+      <div class="card-base text-center py-12">
+        <lucide-icon [img]="ReceiptIcon" [size]="48" class="text-gray-300 mx-auto mb-3"></lucide-icon>
+        <p class="text-gray-500">Nenhuma conta mensal cadastrada</p>
+        <p class="text-sm text-gray-400 mt-1">
+          Comece adicionando suas contas fixas como água, luz, internet e assinaturas
+        </p>
+        <button (click)="openCreateModal()" class="mt-4 btn-primary px-6 py-2 text-sm">
+          Adicionar Primeira Conta
+        </button>
+      </div>
+    } @else {
+      <!-- Grid de Contas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (bill of bills(); track bill.id) {
+          <div class="card-base hover:shadow-lg transition-all group relative">
+            <!-- Action Buttons -->
+            <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                (click)="openEditModal(bill)"
+                class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                title="Editar"
+              >
+                <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-600"></lucide-icon>
+              </button>
+              <button
+                (click)="confirmDelete(bill)"
+                class="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                title="Excluir"
+              >
+                <lucide-icon [img]="Trash2Icon" [size]="16" class="text-red-600"></lucide-icon>
+              </button>
+            </div>
+
+            <!-- Header do Card -->
+            <div class="flex items-start justify-between mb-3">
+              <div class="p-2 bg-primary bg-opacity-10 rounded-lg">
+                <lucide-icon [img]="ReceiptIcon" [size]="20" class="text-primary"></lucide-icon>
+              </div>
+              <span
+                class="text-xs px-2 py-1 rounded-full font-medium"
+                [class]="getPeriodicidadeBadgeClass(bill.periodicidade)"
+              >
+                {{ getPeriodicidadeLabel(bill.periodicidade) }}
+              </span>
+            </div>
+
+            <!-- Nome e Categoria -->
+            <h4 class="font-bold text-gray-900 mb-1 pr-16">{{ bill.descricao }}</h4>
+            <p class="text-xs text-gray-500 mb-3">{{ bill.subcategoria_nome }}</p>
+
+            <!-- Valor e Vencimento -->
+            <div class="border-t border-gray-100 pt-3 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">Valor</span>
+                <span class="font-bold text-gray-900">
+                  @if (bill.valor_previsto) {
+                    {{ formatCurrency(bill.valor_previsto) }}
+                  } @else {
+                    <span class="text-gray-400 text-sm">Variável</span>
+                  }
+                </span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">Vencimento</span>
+                <span class="text-sm font-medium text-gray-700">
+                  Dia {{ bill.dia_execucao }}
+                  @if (bill.periodicidade === 'ANUAL' && bill.mes_execucao) {
+                    de {{ getMesLabel(bill.mes_execucao) }}
+                  }
+                </span>
+              </div>
+
+              @if (bill.conta_nome) {
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-500">Conta</span>
+                  <span class="text-xs text-gray-600 flex items-center gap-1">
+                    <lucide-icon [img]="WalletIcon" [size]="12"></lucide-icon>
+                    {{ bill.conta_nome }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- Bill Modal -->
+<app-bill-modal
+  #billModal
+  (saved)="onBillSaved($event)"
+  (closed)="selectedBill.set(null)"
+></app-bill-modal>
+
+<!-- Delete Confirmation Dialog -->
+@if (showDeleteDialog()) {
+  <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div
+        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        (click)="cancelDelete()"
+      ></div>
+
+      <!-- Dialog -->
+      <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-6 z-10">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="p-3 bg-red-100 rounded-full flex-shrink-0">
+            <lucide-icon [img]="Trash2Icon" [size]="24" class="text-red-600"></lucide-icon>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-900">Remover Conta Mensal</h3>
+            <p class="text-sm text-gray-600 mt-1">
+              Tem certeza que deseja remover a conta <strong>{{ selectedBill()?.descricao }}</strong>?
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button
+            (click)="cancelDelete()"
+            [disabled]="deleting()"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="deleteBill()"
+            [disabled]="deleting()"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            @if (deleting()) {
+              <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              <span>Removendo...</span>
+            } @else {
+              <span>Remover</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

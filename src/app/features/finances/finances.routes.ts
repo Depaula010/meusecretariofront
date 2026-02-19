@@ -25,5 +25,11 @@ export const financesRoutes: Routes = [
     loadComponent: () =>
       import('./accounts.component').then(m => m.AccountsComponent),
     title: 'Contas - Meu Secretário'
+  },
+  {
+    path: 'bills',
+    loadComponent: () =>
+      import('./bills.component').then(m => m.BillsComponent),
+    title: 'Contas Mensais - Meu Secretário'
   }
 ];

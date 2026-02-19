@@ -82,16 +82,24 @@ export class TransactionsComponent implements OnInit {
     has_more: false
   });
 
-  // Computed: Estatísticas
+  // Computed: Estatísticas ajustadas para bater com o padrão do Backend
   totalReceitas = computed(() => {
-    return this.transactions()
-      .filter(t => t.tipo === 'receita')
+    const list = this.transactions();
+    if (!Array.isArray(list)) return 0;
+
+    // Procura por 'Receita' com R maiúsculo
+    return list
+      .filter(t => t.tipo === 'Receita')
       .reduce((sum, t) => sum + t.valor, 0);
   });
 
   totalDespesas = computed(() => {
-    return this.transactions()
-      .filter(t => t.tipo === 'despesa')
+    const list = this.transactions();
+    if (!Array.isArray(list)) return 0;
+
+    // Procura por 'Despesa' com D maiúsculo
+    return list
+      .filter(t => t.tipo === 'Despesa')
       .reduce((sum, t) => sum + t.valor, 0);
   });
 
@@ -99,7 +107,7 @@ export class TransactionsComponent implements OnInit {
     return this.totalReceitas() - this.totalDespesas();
   });
 
-  constructor(private financesService: FinancesService) {}
+  constructor(private financesService: FinancesService) { }
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -108,16 +116,28 @@ export class TransactionsComponent implements OnInit {
   /**
    * Carregar transações do backend
    */
+  // No transactions.component.ts
   loadTransactions(): void {
     this.loading.set(true);
     this.error.set(null);
 
     this.financesService.getTransactions(this.filters()).subscribe({
-      next: (response) => {
-        this.transactions.set(response.data || []);
-        if (response.pagination) {
-          this.pagination.set(response.pagination);
-        }
+      next: (response: any) => {
+        // De acordo com o log, os dados reais estão em response.data
+        const apiData = response.data;
+
+        // 1. Extraímos a lista de transações (que é o Array(50) do print)
+        const transactionsList = apiData?.transactions || [];
+        this.transactions.set(transactionsList);
+
+        // 2. Extraímos a paginação que também está dentro de 'data'
+        this.pagination.set({
+          total: apiData?.total || 0,
+          limit: apiData?.limit || 50,
+          offset: apiData?.offset || 0,
+          has_more: (apiData?.offset + (apiData?.limit || 0)) < (apiData?.total || 0)
+        });
+
         this.loading.set(false);
       },
       error: (err) => {
@@ -131,11 +151,13 @@ export class TransactionsComponent implements OnInit {
   /**
    * Aplicar filtros
    */
-  applyFilters(tipo?: 'receita' | 'despesa'): void {
+
+
+  applyFilters(tipo?: 'Receita' | 'Despesa'): void {
     this.filters.update(f => ({
       ...f,
       tipo,
-      offset: 0 // Reset paginação
+      offset: 0
     }));
     this.loadTransactions();
   }
@@ -165,19 +187,27 @@ export class TransactionsComponent implements OnInit {
     });
   }
 
-  /**
-   * Formatar data (YYYY-MM-DD -> DD/MM/YYYY)
-   */
-  formatDate(dateString: string): string {
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('pt-BR');
+
+  formatDate(dateString: any): string {
+    if (!dateString) return '-';
+
+    try {
+      const date = new Date(dateString + 'T00:00:00');
+      if (isNaN(date.getTime())) {
+        return '-';
+      }
+
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return '-';
+    }
   }
 
   /**
    * Obter cor da badge de tipo
    */
-  getTypeBadgeClass(tipo: 'receita' | 'despesa'): string {
-    return tipo === 'receita'
+  getTypeBadgeClass(tipo: string): string {
+    return tipo === 'Receita'
       ? 'bg-green-100 text-green-800 border-green-200'
       : 'bg-red-100 text-red-800 border-red-200';
   }

@@ -250,13 +250,13 @@ export class TransactionModalComponent implements OnInit {
       this.form.patchValue({
         descricao: value.descricao,
         valor: value.valor,
-        tipo: value.tipo === 'receita' ? 'Receita' : 'Despesa',
+        tipo: value.tipo,
         data: value.data,
         observacoes: value.observacoes || ''
       });
       // Carregar categorias do tipo correto
-      const tipo = value.tipo === 'receita' ? 'Receita' : 'Despesa';
-      this.loadCategories(tipo);
+      const tipo = value.tipo;
+      this.loadCategories(value.tipo);
     } else {
       this.editMode.set(false);
       this.transactionId = null;

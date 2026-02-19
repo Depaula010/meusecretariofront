@@ -9,6 +9,7 @@ import {
   CreditCard,
   LogOut,
   ChevronLeft,
+  Receipt,
 } from 'lucide-angular';
 
 interface NavItem {
@@ -98,6 +99,7 @@ export class SidebarComponent {
   // Ícones do Lucide
   ChevronLeftIcon = ChevronLeft;
   LogOutIcon = LogOut;
+  ReceiptIcon = Receipt;
 
   // Itens de navegação
   navItems: NavItem[] = [
@@ -110,6 +112,11 @@ export class SidebarComponent {
       label: 'Minhas Finanças',
       route: '/finances',
       icon: Wallet,
+    },
+    {
+      label: 'Contas Mensais',
+      route: '/finances/bills',
+      icon: Receipt,
     },
     {
       label: 'Assinatura',
