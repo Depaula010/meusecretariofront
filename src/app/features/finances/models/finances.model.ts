@@ -188,6 +188,8 @@ export interface ScheduledBill {
   conta_nome?: string;
   data_inicio: string;
   incluir_na_reserva?: boolean;
+  total_parcelas?: number;
+  parcelas_executadas?: number;
 }
 
 /**

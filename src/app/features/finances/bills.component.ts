@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
   Plus,
@@ -18,23 +19,27 @@ import {
   BarChart2,
   Info,
   X,
+  Search,
+  Filter,
+  ArrowUpDown,
+  XCircle,
 } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { FinancesService } from './services/finances.service';
-import { ScheduledBill, BillsSummary } from './models/finances.model';
+import { ScheduledBill, BillsSummary, BankAccount } from './models/finances.model';
 import { BillModalComponent } from './components/bill-modal.component';
 
 /**
  * Bills Component
  *
  * Tela de gerenciamento de contas mensais (água, luz, internet, salário, etc.)
- * Layout de lista agrupada + 5 cards informativos no topo.
+ * Layout de lista agrupada + 4 cards informativos no topo e filtros.
  */
 @Component({
   selector: 'app-bills',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, BillModalComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, BillModalComponent],
   templateUrl: './bills.component.html',
 })
 export class BillsComponent implements OnInit {
@@ -57,24 +62,87 @@ export class BillsComponent implements OnInit {
   BarChartIcon = BarChart2;
   InfoIcon = Info;
   XIcon = X;
+  SearchIcon = Search;
+  FilterIcon = Filter;
+  SortIcon = ArrowUpDown;
+  ClearIcon = XCircle;
 
   // ── Signals de estado ──
   loading = signal(true);
   error = signal<string | null>(null);
   bills = signal<ScheduledBill[]>([]);
   summary = signal<BillsSummary | null>(null);
+  accounts = signal<BankAccount[]>([]); // Contas bancárias para o filtro
+
   selectedBill = signal<ScheduledBill | null>(null);
   showDeleteDialog = signal(false);
   deleting = signal(false);
   showReserveDetails = signal(false);
 
+  // ── Filtros e Ordenação ──
+  searchTerm = signal('');
+  selectedContaId = signal<number | null>(null);
+  sortField = signal<'dia_execucao' | 'valor_previsto' | 'descricao'>('dia_execucao');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+
   // ── Seções colapsáveis ──
   despesasExpanded = signal(true);
   receitasExpanded = signal(true);
 
-  // ── Computed: separação por tipo ──
-  despesas = computed(() => this.bills().filter(b => b.tipo_transacao === 'Despesa'));
-  receitas = computed(() => this.bills().filter(b => b.tipo_transacao === 'Receita'));
+  // ── Helper de Filtro e Ordenação ──
+  private applyFilters(items: ScheduledBill[]): ScheduledBill[] {
+    let result = [...items];
+
+    // 1. Filtro de Texto (Nome, Categoria, Subcategoria)
+    const term = this.searchTerm().toLowerCase().trim();
+    if (term) {
+      result = result.filter(b =>
+        b.descricao.toLowerCase().includes(term) ||
+        b.subcategoria_nome?.toLowerCase().includes(term) ||
+        b.macro_categoria_nome?.toLowerCase().includes(term)
+      );
+    }
+
+    // 2. Filtro de Conta
+    const contaId = this.selectedContaId();
+    if (contaId) {
+      result = result.filter(b => b.conta_id === contaId);
+    }
+
+    // 3. Ordenação
+    const field = this.sortField();
+    const direction = this.sortDirection() === 'asc' ? 1 : -1;
+
+    result.sort((a, b) => {
+      let valA = a[field];
+      let valB = b[field];
+
+      // Tratamento para nulos (ficam no final)
+      if (valA === null || valA === undefined) return 1;
+      if (valB === null || valB === undefined) return -1;
+
+      // Tratamento específico para texto
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return -1 * direction;
+      if (valA > valB) return 1 * direction;
+      return 0;
+    });
+
+    return result;
+  }
+
+  // ── Computed: separação por tipo com filtros aplicados ──
+  despesas = computed(() => {
+    const raw = this.bills().filter(b => b.tipo_transacao === 'Despesa');
+    return this.applyFilters(raw);
+  });
+
+  receitas = computed(() => {
+    const raw = this.bills().filter(b => b.tipo_transacao === 'Receita');
+    return this.applyFilters(raw);
+  });
 
   // ── Computed: contas da reserva ──
   contasReserva = computed(() =>
@@ -111,18 +179,27 @@ export class BillsComponent implements OnInit {
     forkJoin({
       bills: this.financesService.getBills(),
       summary: this.financesService.getBillsSummary(),
+      accounts: this.financesService.getAccounts(),
     }).pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ bills, summary }) => {
+        next: ({ bills, summary, accounts }) => {
           this.bills.set(bills);
           this.summary.set(summary);
+          this.accounts.set(accounts);
         },
-        error: (err) => this.error.set(err.message || 'Erro ao carregar contas mensais.'),
+        error: (err) => this.error.set(err.message || 'Erro ao carregar dados.'),
       });
   }
 
   loadBills(): void {
     this.loadAll();
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.selectedContaId.set(null);
+    this.sortField.set('dia_execucao');
+    this.sortDirection.set('asc');
   }
 
   openCreateModal(): void {

@@ -97,6 +97,73 @@
   </div>
   }
 
+  <!-- ── Filtros ── -->
+  @if (!loading() && bills().length > 0) {
+  <div class="flex flex-col md:flex-row gap-3 mb-8 items-stretch md:items-center">
+
+    <!-- Busca -->
+    <div class="relative flex-grow">
+      <lucide-icon [img]="SearchIcon" [size]="16"
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></lucide-icon>
+      <input type="text" placeholder="Buscar..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+        class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-sm bg-white">
+    </div>
+
+    <div class="flex gap-2 text-sm overflow-x-auto pb-1 md:pb-0 hide-scrollbar shrink-0">
+
+      <!-- Conta Filter -->
+      <div class="relative min-w-[140px]">
+        <lucide-icon [img]="FilterIcon" [size]="14"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></lucide-icon>
+        <select [ngModel]="selectedContaId()" (ngModelChange)="selectedContaId.set($event ? +$event : null)"
+          class="w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none appearance-none cursor-pointer truncate">
+          <option [value]="null">Todas as contas</option>
+          @for (acc of accounts(); track acc.id) {
+          <option [value]="acc.id">{{ acc.nome }}</option>
+          }
+        </select>
+        <lucide-icon [img]="ChevronDownIcon" [size]="14"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></lucide-icon>
+      </div>
+
+      <!-- Ordenação -->
+      <div class="flex bg-white border border-gray-200 rounded-xl overflow-hidden divide-x divide-gray-100">
+        <!-- Campo -->
+        <div class="relative w-[110px]">
+          <select [ngModel]="sortField()" (ngModelChange)="sortField.set($event)"
+            class="w-full h-full pl-3 pr-6 bg-transparent border-none focus:ring-0 text-sm appearance-none cursor-pointer outline-none text-gray-700 font-medium">
+            <option value="dia_execucao">Data</option>
+            <option value="valor_previsto">Valor</option>
+            <option value="descricao">Nome</option>
+          </select>
+          <lucide-icon [img]="ChevronDownIcon" [size]="14"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></lucide-icon>
+        </div>
+
+        <!-- Direção -->
+        <button (click)="sortDirection.set(sortDirection() === 'asc' ? 'desc' : 'asc')"
+          class="px-3 hover:bg-gray-50 flex items-center justify-center transition-colors text-gray-500"
+          [title]="sortDirection() === 'asc' ? 'Crescente' : 'Decrescente'">
+          @if (sortDirection() === 'asc') {
+          <lucide-icon [img]="SortIcon" [size]="16" class="rotate-0 transition-transform"></lucide-icon>
+          } @else {
+          <lucide-icon [img]="SortIcon" [size]="16" class="rotate-180 transition-transform"></lucide-icon>
+          }
+        </button>
+      </div>
+
+      <!-- Limpar -->
+      @if (searchTerm() || selectedContaId()) {
+      <button (click)="clearFilters()"
+        class="px-3 py-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Limpar filtros">
+        <lucide-icon [img]="ClearIcon" [size]="18"></lucide-icon>
+      </button>
+      }
+
+    </div>
+  </div>
+  }
+
   <!-- ── Loading State ── -->
   @if (loading()) {
   <div class="space-y-3">
