@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { LucideAngularModule, X, Loader2 } from 'lucide-angular';
+import { LucideAngularModule, X, Loader2, DollarSign, TrendingUp, Calendar, Bell, Tag, CreditCard, Zap, BarChart3, Info } from 'lucide-angular';
 import { FinancesService } from '../services/finances.service';
 import { ScheduledBill, ScheduledBillRequest, BankAccount, Category, SubCategory } from '../models/finances.model';
 import { finalize } from 'rxjs/operators';
@@ -16,151 +16,348 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-bill-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  styles: [`
+    .tipo-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.3;
+      text-align: center;
+    }
+    .tipo-btn.active-fixo {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+    .tipo-btn.active-variavel {
+      background: #faf5ff;
+      border-color: #8b5cf6;
+      color: #6d28d9;
+    }
+    .tipo-btn.inactive {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      color: #6b7280;
+    }
+    .tipo-btn:hover.inactive {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 20px 0 16px;
+    }
+    .section-divider span {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    .section-divider::before, .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+    .valor-hint {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  `],
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 z-50 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
           <!-- Backdrop -->
           <div
-            class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
             (click)="close()"
           ></div>
 
           <!-- Modal -->
-          <div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full p-6 z-10 max-h-[90vh] overflow-y-auto">
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-bold text-gray-900">
-                {{ editMode() ? 'Editar Conta Mensal' : 'Nova Conta Mensal' }}
-              </h2>
+          <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10 max-h-[92vh] flex flex-col">
+
+            <!-- Header fixo -->
+            <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+              <div>
+                <h2 class="text-xl font-bold text-gray-900">
+                  {{ editMode() ? 'Editar Conta' : 'Nova Conta Mensal' }}
+                </h2>
+                <p class="text-xs text-gray-500 mt-0.5">Preencha os dados da sua conta recorrente</p>
+              </div>
               <button
                 (click)="close()"
-                class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                class="p-2 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <lucide-icon [img]="XIcon" [size]="20" class="text-gray-500"></lucide-icon>
+                <lucide-icon [img]="XIcon" [size]="20" class="text-gray-400"></lucide-icon>
               </button>
             </div>
 
-            <!-- Error Message -->
-            @if (error()) {
-              <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p class="text-sm text-red-700">{{ error() }}</p>
-              </div>
-            }
+            <!-- Scrollable body -->
+            <div class="overflow-y-auto flex-1 px-6 py-4">
 
-            <!-- Form -->
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-
-              <!-- Tipo de Agendamento -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-                <div class="flex gap-2">
-                  <button
-                    type="button"
-                    (click)="setTipo('FIXO')"
-                    class="flex-1 py-2 px-4 rounded-lg font-medium transition-all text-sm"
-                    [class.bg-primary]="form.get('tipo_agendamento')?.value === 'FIXO'"
-                    [class.text-white]="form.get('tipo_agendamento')?.value === 'FIXO'"
-                    [class.shadow-md]="form.get('tipo_agendamento')?.value === 'FIXO'"
-                    [class.bg-gray-100]="form.get('tipo_agendamento')?.value !== 'FIXO'"
-                    [class.text-gray-700]="form.get('tipo_agendamento')?.value !== 'FIXO'"
-                  >
-                    Fixo (valor certo)
-                  </button>
-                  <button
-                    type="button"
-                    (click)="setTipo('LEMBRETE_VARIAVEL')"
-                    class="flex-1 py-2 px-4 rounded-lg font-medium transition-all text-sm"
-                    [class.bg-primary]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL'"
-                    [class.text-white]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL'"
-                    [class.shadow-md]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL'"
-                    [class.bg-gray-100]="form.get('tipo_agendamento')?.value !== 'LEMBRETE_VARIAVEL'"
-                    [class.text-gray-700]="form.get('tipo_agendamento')?.value !== 'LEMBRETE_VARIAVEL'"
-                  >
-                    Variável (sem valor fixo)
-                  </button>
-                </div>
-              </div>
-
-              <!-- Descrição -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <input
-                  type="text"
-                  formControlName="descricao"
-                  placeholder="Ex: Conta de Água, Luz, Internet..."
-                  class="input-base"
-                  [class.border-red-300]="isFieldInvalid('descricao')"
-                />
-                @if (isFieldInvalid('descricao')) {
-                  <p class="mt-1 text-xs text-red-600">Descrição é obrigatória</p>
-                }
-              </div>
-
-              <!-- Valor Previsto (só para FIXO) -->
-              @if (form.get('tipo_agendamento')?.value === 'FIXO') {
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Valor Previsto</label>
-                  <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
-                    <input
-                      type="number"
-                      formControlName="valor_previsto"
-                      placeholder="0,00"
-                      step="0.01"
-                      min="0.01"
-                      class="input-base pl-12"
-                      [class.border-red-300]="isFieldInvalid('valor_previsto')"
-                    />
-                  </div>
-                  @if (isFieldInvalid('valor_previsto')) {
-                    <p class="mt-1 text-xs text-red-600">Valor previsto é obrigatório e deve ser positivo</p>
-                  }
+              <!-- Error Message -->
+              @if (error()) {
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                  <span class="text-red-500 text-lg leading-5">⚠</span>
+                  <p class="text-sm text-red-700">{{ error() }}</p>
                 </div>
               }
 
-              <!-- Periodicidade -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Periodicidade</label>
-                <select
-                  formControlName="periodicidade"
-                  class="input-base"
-                  [class.border-red-300]="isFieldInvalid('periodicidade')"
-                  (change)="onPeriodicidadeChange()"
-                >
-                  <option value="MENSAL">Mensal</option>
-                  <option value="ANUAL">Anual</option>
-                  <option value="SEMANAL">Semanal</option>
-                  <option value="QUINZENAL">Quinzenal</option>
-                  <option value="DIARIA">Diária</option>
-                </select>
-              </div>
+              <!-- Form -->
+              <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-              <!-- Dia de Execução + Mês (lado a lado) -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Dia de Vencimento
-                  </label>
+                <!-- ── TIPO ── -->
+                <div class="mb-5">
+                  <label class="block text-sm font-semibold text-gray-700 mb-3">Tipo de Conta</label>
+                  <div class="grid grid-cols-2 gap-3">
+
+                    <!-- Fixo -->
+                    <button
+                      type="button"
+                      (click)="setTipo('FIXO')"
+                      class="tipo-btn"
+                      [class.active-fixo]="form.get('tipo_agendamento')?.value === 'FIXO'"
+                      [class.inactive]="form.get('tipo_agendamento')?.value !== 'FIXO'"
+                    >
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mb-1"
+                        [style.background]="form.get('tipo_agendamento')?.value === 'FIXO' ? '#dbeafe' : '#f3f4f6'">
+                        <lucide-icon [img]="DollarIcon" [size]="20"
+                          [class.text-blue-600]="form.get('tipo_agendamento')?.value === 'FIXO'"
+                          [class.text-gray-400]="form.get('tipo_agendamento')?.value !== 'FIXO'"
+                        ></lucide-icon>
+                      </div>
+                      <span class="font-semibold">Valor Fixo</span>
+                      <span class="text-xs opacity-70">Mesmo valor todo mês</span>
+                    </button>
+
+                    <!-- Variável -->
+                    <button
+                      type="button"
+                      (click)="setTipo('LEMBRETE_VARIAVEL')"
+                      class="tipo-btn"
+                      [class.active-variavel]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL'"
+                      [class.inactive]="form.get('tipo_agendamento')?.value !== 'LEMBRETE_VARIAVEL'"
+                    >
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mb-1"
+                        [style.background]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL' ? '#ede9fe' : '#f3f4f6'">
+                        <lucide-icon [img]="TrendingIcon" [size]="20"
+                          [class.text-purple-600]="form.get('tipo_agendamento')?.value === 'LEMBRETE_VARIAVEL'"
+                          [class.text-gray-400]="form.get('tipo_agendamento')?.value !== 'LEMBRETE_VARIAVEL'"
+                        ></lucide-icon>
+                      </div>
+                      <span class="font-semibold">Valor Variável</span>
+                      <span class="text-xs opacity-70">Valor muda todo mês</span>
+                    </button>
+
+                  </div>
+                </div>
+
+                <!-- ── IDENTIFICAÇÃO ── -->
+                <div class="section-divider"><span>Identificação</span></div>
+
+                <!-- Descrição -->
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
                   <input
-                    type="number"
-                    formControlName="dia_execucao"
-                    placeholder="1-31"
-                    min="1"
-                    max="31"
+                    type="text"
+                    formControlName="descricao"
+                    placeholder="Ex: Conta de Água, Netflix, Internet..."
                     class="input-base"
-                    [class.border-red-300]="isFieldInvalid('dia_execucao')"
+                    [class.border-red-300]="isFieldInvalid('descricao')"
                   />
-                  @if (isFieldInvalid('dia_execucao')) {
-                    <p class="mt-1 text-xs text-red-600">Dia deve ser entre 1 e 31</p>
+                  @if (isFieldInvalid('descricao')) {
+                    <p class="mt-1 text-xs text-red-600">Descrição é obrigatória</p>
                   }
                 </div>
 
-                @if (form.get('periodicidade')?.value === 'ANUAL') {
+                <!-- Categoria + Subcategoria -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
+                    @if (loadingCategories()) {
+                      <div class="input-base bg-gray-50 text-gray-400 text-sm">Carregando...</div>
+                    } @else {
+                      <select
+                        formControlName="macro_categoria"
+                        (change)="onCategoriaChange()"
+                        class="input-base"
+                        [class.border-red-300]="isFieldInvalid('macro_categoria')"
+                      >
+                        <option value="">Selecione...</option>
+                        @for (cat of categories(); track cat.macro_id) {
+                          <option [value]="cat.macro_id">{{ cat.macro_categoria }}</option>
+                        }
+                      </select>
+                    }
+                    @if (isFieldInvalid('macro_categoria')) {
+                      <p class="mt-1 text-xs text-red-600">Obrigatório</p>
+                    }
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Subcategoria *</label>
+                    <select
+                      formControlName="subcategoria_id"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('subcategoria_id')"
+                      [disabled]="subcategories().length === 0"
+                    >
+                      <option [ngValue]="null">{{ subcategories().length === 0 ? 'Selecione categoria' : 'Selecione...' }}</option>
+                      @for (sub of subcategories(); track sub.id) {
+                        <option [ngValue]="sub.id">{{ sub.nome }}</option>
+                      }
+                    </select>
+                    @if (isFieldInvalid('subcategoria_id')) {
+                      <p class="mt-1 text-xs text-red-600">Obrigatório</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Conta para Débito -->
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Conta para Débito *</label>
+                  @if (loadingAccounts()) {
+                    <div class="input-base bg-gray-50 text-gray-400 text-sm">Carregando contas...</div>
+                  } @else if (accounts().length === 0) {
+                    <div class="input-base bg-yellow-50 text-yellow-700 text-sm">Nenhuma conta cadastrada</div>
+                  } @else {
+                    <select
+                      formControlName="conta_id"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('conta_id')"
+                    >
+                      <option [ngValue]="null">Selecione uma conta...</option>
+                      @for (account of accounts(); track account.id) {
+                        <option [ngValue]="account.id">{{ account.nome }} ({{ account.banco }})</option>
+                      }
+                    </select>
+                    @if (isFieldInvalid('conta_id')) {
+                      <p class="mt-1 text-xs text-red-600">Conta é obrigatória</p>
+                    }
+                  }
+                </div>
+
+                <!-- ── VALOR ── -->
+                <div class="section-divider"><span>Valor</span></div>
+
+                <!-- Valor (comportamento diferente por tipo) -->
+                <div class="mb-4">
+                  @if (form.get('tipo_agendamento')?.value === 'FIXO') {
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Mensal *</label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
+                      <input
+                        type="number"
+                        formControlName="valor_previsto"
+                        placeholder="0,00"
+                        step="0.01"
+                        min="0.01"
+                        class="input-base pl-12"
+                        [class.border-red-300]="isFieldInvalid('valor_previsto')"
+                      />
+                    </div>
+                    @if (isFieldInvalid('valor_previsto')) {
+                      <p class="mt-1 text-xs text-red-600">Valor é obrigatório e deve ser positivo</p>
+                    }
+                  } @else {
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Valor Estimado
+                      <span class="text-gray-400 font-normal text-xs ml-1">(opcional)</span>
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
+                      <input
+                        type="number"
+                        formControlName="valor_previsto"
+                        placeholder="0,00 — deixe vazio se não souber"
+                        step="0.01"
+                        min="0.01"
+                        class="input-base pl-12"
+                      />
+                    </div>
+                    <p class="valor-hint">💡 Usado para estimar o gasto mensal no painel</p>
+                  }
+                </div>
+
+                <!-- ── RESERVA DE EMERGÊNCIA ── -->
+                <div class="mb-5 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                  <div class="flex items-start gap-3">
+                    <div class="pt-0.5">
+                      <input type="checkbox" id="incluirNaReserva" formControlName="incluirNaReserva" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                    </div>
+                    <div>
+                      <label for="incluirNaReserva" class="block text-sm font-semibold text-gray-900 cursor-pointer">
+                        Considerar na Reserva de Emergência
+                      </label>
+                      <p class="text-xs text-blue-700 mt-1 leading-relaxed">
+                        Se marcado, o valor desta conta será somado ao cálculo da sua reserva ideal.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ── AGENDAMENTO ── -->
+                <div class="section-divider"><span>Agendamento</span></div>
+
+                <!-- Periodicidade + Dia + Mês -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Periodicidade *</label>
+                    <select
+                      formControlName="periodicidade"
+                      class="input-base"
+                      (change)="onPeriodicidadeChange()"
+                    >
+                      <option value="MENSAL">Mensal</option>
+                      <option value="QUINZENAL">Quinzenal</option>
+                      <option value="SEMANAL">Semanal</option>
+                      <option value="ANUAL">Anual</option>
+                      <option value="DIARIA">Diária</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      {{ form.get('periodicidade')?.value === 'ANUAL' ? 'Dia / Mês' : 'Dia de Vencimento *' }}
+                    </label>
+                    <input
+                      type="number"
+                      formControlName="dia_execucao"
+                      placeholder="1 – 31"
+                      min="1"
+                      max="31"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('dia_execucao')"
+                    />
+                    @if (isFieldInvalid('dia_execucao')) {
+                      <p class="mt-1 text-xs text-red-600">Dia deve ser entre 1 e 31</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Mês de execução (só para ANUAL) -->
+                @if (form.get('periodicidade')?.value === 'ANUAL') {
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mês de Vencimento *</label>
                     <select formControlName="mes_execucao" class="input-base">
-                      <option [ngValue]="null">Selecione...</option>
+                      <option [ngValue]="null">Selecione o mês...</option>
                       <option [ngValue]="1">Janeiro</option>
                       <option [ngValue]="2">Fevereiro</option>
                       <option [ngValue]="3">Março</option>
@@ -176,126 +373,61 @@ import { finalize } from 'rxjs/operators';
                     </select>
                   </div>
                 }
-              </div>
 
-              <!-- Data de Início -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
-                <input
-                  type="date"
-                  formControlName="data_inicio"
-                  class="input-base"
-                  [class.border-red-300]="isFieldInvalid('data_inicio')"
-                />
-                @if (isFieldInvalid('data_inicio')) {
-                  <p class="mt-1 text-xs text-red-600">Data de início é obrigatória</p>
-                }
-              </div>
-
-              <!-- Categoria (Macro) -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                @if (loadingCategories()) {
-                  <div class="input-base bg-gray-50 text-gray-500">Carregando categorias...</div>
-                } @else {
-                  <select
-                    formControlName="macro_categoria"
-                    (change)="onCategoriaChange()"
-                    class="input-base"
-                    [class.border-red-300]="isFieldInvalid('macro_categoria')"
-                  >
-                    <option value="">Selecione uma categoria...</option>
-                    @for (cat of categories(); track cat.macro_id) {
-                      <option [value]="cat.macro_id">{{ cat.macro_categoria }}</option>
+                <!-- Data de Início + Notificação -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Data de Início *</label>
+                    <input
+                      type="date"
+                      formControlName="data_inicio"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('data_inicio')"
+                    />
+                    @if (isFieldInvalid('data_inicio')) {
+                      <p class="mt-1 text-xs text-red-600">Obrigatório</p>
                     }
-                  </select>
-                  @if (isFieldInvalid('macro_categoria')) {
-                    <p class="mt-1 text-xs text-red-600">Categoria é obrigatória</p>
-                  }
-                }
-              </div>
+                  </div>
 
-              <!-- Subcategoria -->
-              @if (subcategories().length > 0) {
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Subcategoria</label>
-                  <select
-                    formControlName="subcategoria_id"
-                    class="input-base"
-                    [class.border-red-300]="isFieldInvalid('subcategoria_id')"
-                  >
-                    <option [ngValue]="null">Selecione uma subcategoria...</option>
-                    @for (sub of subcategories(); track sub.id) {
-                      <option [ngValue]="sub.id">{{ sub.nome }}</option>
-                    }
-                  </select>
-                  @if (isFieldInvalid('subcategoria_id')) {
-                    <p class="mt-1 text-xs text-red-600">Subcategoria é obrigatória</p>
-                  }
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notificar (dias antes)</label>
+                    <input
+                      type="number"
+                      formControlName="notificar_antes_dias"
+                      min="0"
+                      max="30"
+                      class="input-base"
+                    />
+                  </div>
                 </div>
-              }
 
-              <!-- Conta Bancária -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Conta para Débito</label>
-                @if (loadingAccounts()) {
-                  <div class="input-base bg-gray-50 text-gray-500">Carregando contas...</div>
-                } @else if (accounts().length === 0) {
-                  <div class="input-base bg-yellow-50 text-yellow-700">Nenhuma conta cadastrada</div>
+              </form>
+            </div>
+
+            <!-- Footer fixo -->
+            <div class="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+              <button
+                type="button"
+                (click)="close()"
+                class="flex-1 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors font-medium text-gray-600 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                (click)="onSubmit()"
+                [disabled]="loading()"
+                class="flex-[2] btn-primary py-3 flex items-center justify-center gap-2 rounded-xl text-sm"
+              >
+                @if (loading()) {
+                  <lucide-icon [img]="LoaderIcon" [size]="18" class="animate-spin"></lucide-icon>
+                  <span>Salvando...</span>
                 } @else {
-                  <select
-                    formControlName="conta_id"
-                    class="input-base"
-                    [class.border-red-300]="isFieldInvalid('conta_id')"
-                  >
-                    <option [ngValue]="null">Selecione uma conta...</option>
-                    @for (account of accounts(); track account.id) {
-                      <option [ngValue]="account.id">{{ account.nome }} ({{ account.banco }})</option>
-                    }
-                  </select>
-                  @if (isFieldInvalid('conta_id')) {
-                    <p class="mt-1 text-xs text-red-600">Conta é obrigatória</p>
-                  }
+                  <span>{{ editMode() ? '✓  Atualizar Conta' : '+ Salvar Conta' }}</span>
                 }
-              </div>
+              </button>
+            </div>
 
-              <!-- Notificar X dias antes -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Notificar <span class="text-gray-400 font-normal">(dias antes do vencimento)</span>
-                </label>
-                <input
-                  type="number"
-                  formControlName="notificar_antes_dias"
-                  min="0"
-                  max="30"
-                  class="input-base"
-                />
-              </div>
-
-              <!-- Buttons -->
-              <div class="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  (click)="close()"
-                  class="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  [disabled]="loading()"
-                  class="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
-                >
-                  @if (loading()) {
-                    <lucide-icon [img]="LoaderIcon" [size]="18" class="animate-spin"></lucide-icon>
-                    <span>Salvando...</span>
-                  } @else {
-                    <span>{{ editMode() ? 'Atualizar' : 'Salvar' }}</span>
-                  }
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       </div>
@@ -309,6 +441,15 @@ export class BillModalComponent implements OnInit {
   // Icons
   XIcon = X;
   LoaderIcon = Loader2;
+  DollarIcon = DollarSign;
+  TrendingIcon = TrendingUp;
+  CalendarIcon = Calendar;
+  BellIcon = Bell;
+  TagIcon = Tag;
+  CardIcon = CreditCard;
+  ZapIcon = Zap;
+  ChartIcon = BarChart3;
+  InfoIcon = Info;
 
   // Signals
   isOpen = signal(false);
@@ -401,9 +542,11 @@ export class BillModalComponent implements OnInit {
   setTipo(tipo: 'FIXO' | 'LEMBRETE_VARIAVEL'): void {
     this.form.patchValue({ tipo_agendamento: tipo });
     if (tipo === 'LEMBRETE_VARIAVEL') {
+      // Para variável: valor_previsto é OPCIONAL (estimativa)
       this.form.get('valor_previsto')?.clearValidators();
-      this.form.get('valor_previsto')?.setValue(null);
+      this.form.get('valor_previsto')?.setValidators([Validators.min(0.01)]);
     } else {
+      // Para fixo: valor_previsto é OBRIGATÓRIO
       this.form.get('valor_previsto')?.setValidators([Validators.required, Validators.min(0.01)]);
     }
     this.form.get('valor_previsto')?.updateValueAndValidity();
@@ -466,6 +609,7 @@ export class BillModalComponent implements OnInit {
       subcategoria_id: formValue.subcategoria_id,
       conta_id: formValue.conta_id,
       notificar_antes_dias: formValue.notificar_antes_dias || 3,
+      incluir_na_reserva: formValue.incluirNaReserva,
     };
 
     if (formValue.valor_previsto !== null && formValue.valor_previsto !== undefined) {

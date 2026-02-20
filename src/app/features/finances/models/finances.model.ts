@@ -13,7 +13,7 @@ export interface Transaction {
   valor: number;
   tipo: 'Receita' | 'Despesa'; // Alterado de 'receita' | 'despesa'
   categoria: string;
-  data: string; 
+  data: string;
   conta_bancaria?: string;
   conta_bancaria_id?: number;
   observacoes?: string;
@@ -175,15 +175,19 @@ export interface ScheduledBill {
   descricao: string;
   valor_previsto?: number;
   tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
+  tipo_transacao: 'Receita' | 'Despesa'; // derivado do grupo da categoria
+  grupo?: string;                          // ex: "Renda", "Moradia", "Lazer"
   periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
   dia_execucao: number;
   mes_execucao?: number;
   notificar_antes_dias: number;
   subcategoria_id: number;
   subcategoria_nome?: string;
+  macro_categoria_nome?: string;
   conta_id: number;
   conta_nome?: string;
   data_inicio: string;
+  incluir_na_reserva?: boolean;
 }
 
 /**
@@ -195,11 +199,12 @@ export interface ScheduledBillRequest {
   tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
   periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
   dia_execucao: number;
-  mes_execucao?: number;
+  mes_execucao?: number | null;
   notificar_antes_dias?: number;
   subcategoria_id: number;
   conta_id: number;
-  data_inicio: string;
+  data_inicio?: string;
+  incluir_na_reserva?: boolean;
 }
 
 /**
@@ -217,5 +222,33 @@ export interface BillsResponse {
 export interface BillCreateResponse {
   status: 'success' | 'error';
   data?: ScheduledBill;
+  message?: string;
+}
+
+/**
+ * Reserva de Emergência (calculada pelo backend)
+ */
+export interface EmergencyReserveInfo {
+  meta: number;                    // valor total da reserva ideal
+  gasto_mensal_equivalente: number; // custo mensal base
+  meses_configurados: number;       // ex: 6 meses
+}
+
+/**
+ * Resumo financeiro das contas mensais
+ */
+export interface BillsSummary {
+  total_despesas_mensais: number;
+  total_despesas_anuais: number;
+  total_receitas_mensais: number;
+  reserva_emergencia: EmergencyReserveInfo;
+}
+
+/**
+ * Response da API - Resumo das Contas Mensais
+ */
+export interface BillsSummaryResponse {
+  status: 'success' | 'error';
+  data?: BillsSummary;
   message?: string;
 }

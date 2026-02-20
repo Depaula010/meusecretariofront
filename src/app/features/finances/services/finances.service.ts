@@ -19,6 +19,8 @@ import {
   ScheduledBillRequest,
   BillsResponse,
   BillCreateResponse,
+  BillsSummary,
+  BillsSummaryResponse,
 } from '../models/finances.model';
 
 /**
@@ -38,7 +40,7 @@ import {
 export class FinancesService {
   private readonly API_URL = `${environment.apiUrl}${environment.apiPrefix}`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ==========================================
   // TRANSAÇÕES
@@ -285,6 +287,26 @@ export class FinancesService {
             return response.data;
           }
           throw new Error(response.message || 'Erro ao carregar contas mensais');
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Obtém resumo financeiro das contas mensais
+   * (totais por periodicidade, reserva de emergência)
+   *
+   * Endpoint: GET /api/bills/summary
+   */
+  getBillsSummary(): Observable<BillsSummary> {
+    return this.http
+      .get<BillsSummaryResponse>(`${this.API_URL}/api/bills/summary`)
+      .pipe(
+        map((response) => {
+          if (response.status === 'success' && response.data) {
+            return response.data;
+          }
+          throw new Error(response.message || 'Erro ao carregar resumo de contas mensais');
         }),
         catchError(this.handleError)
       );

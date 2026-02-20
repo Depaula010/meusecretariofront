@@ -1,201 +1,436 @@
-<div class="max-w-7xl mx-auto w-full">
-  <!-- Header -->
+<div class="max-w-3xl mx-auto w-full">
+
+  <!-- ── Header ── -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
     <div>
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Contas Mensais</h1>
-      <p class="text-sm text-gray-600 mt-1">
-        Gerencie suas contas fixas e recorrentes
-      </p>
+      <p class="text-sm text-gray-500 mt-1">Receitas e despesas recorrentes agendadas</p>
     </div>
-
     <button (click)="openCreateModal()" class="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
       <lucide-icon [img]="PlusIcon" [size]="18"></lucide-icon>
       <span>Nova Conta</span>
     </button>
   </div>
 
-  <!-- Error State -->
+  <!-- ── Error State ── -->
   @if (error()) {
-    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-      <p class="text-sm text-red-700">{{ error() }}</p>
-      <button
-        (click)="loadBills()"
-        class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
-      >
-        Tentar novamente
-      </button>
-    </div>
+  <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+    <p class="text-sm text-red-700">{{ error() }}</p>
+    <button (click)="loadBills()" class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline">
+      Tentar novamente
+    </button>
+  </div>
   }
 
-  <!-- Card de Resumo -->
-  <div class="card-base bg-gradient-to-br from-primary to-secondary text-white mb-6">
-    <div class="flex items-start justify-between">
-      <div>
-        <p class="text-sm opacity-90 mb-1">Gasto Mensal Estimado</p>
-        <h2 class="text-3xl font-bold">
-          {{ formatCurrency(totalMensalEstimado()) }}
-        </h2>
-        <p class="text-xs opacity-80 mt-2">
-          {{ bills().length }} conta{{ bills().length !== 1 ? 's' : '' }} cadastrada{{ bills().length !== 1 ? 's' : '' }}
-        </p>
+  <!-- ── Resumo (4 cards de totais) ── -->
+  @if (!loading() && summary()) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+    <!-- 1. Gastos Mensais -->
+    <div class="card-base border-l-4 border-red-500 relative overflow-hidden group">
+      <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+        <lucide-icon [img]="TrendingDownIcon" [size]="48" class="text-red-600"></lucide-icon>
       </div>
-      <div class="bg-white bg-opacity-20 p-3 rounded-lg">
-        <lucide-icon [img]="ReceiptIcon" [size]="28"></lucide-icon>
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Gastos Mensais</p>
+      <p class="text-xl md:text-2xl font-bold text-gray-900">
+        {{ formatCurrency(summary()?.total_despesas_mensais) }}
+      </p>
+      <p class="text-xs text-gray-400 mt-1">Recorrentes todo mês</p>
+    </div>
+
+    <!-- 2. Gastos Anuais -->
+    <div class="card-base border-l-4 border-amber-500 relative overflow-hidden group">
+      <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+        <lucide-icon [img]="CalendarIcon" [size]="48" class="text-amber-600"></lucide-icon>
+      </div>
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Gastos Anuais</p>
+      <p class="text-xl md:text-2xl font-bold text-gray-900">
+        {{ formatCurrency(summary()?.total_despesas_anuais) }}
+      </p>
+      <p class="text-xs text-gray-400 mt-1">IPTU, IPVA, Seguros...</p>
+    </div>
+
+    <!-- 3. Reserva de Emergência (Clicável) -->
+    <div (click)="showReserveDetails.set(true)"
+      class="card-base border-l-4 border-blue-500 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all active:scale-[0.98]">
+      <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+        <lucide-icon [img]="ShieldIcon" [size]="48" class="text-blue-600"></lucide-icon>
+      </div>
+
+      <!-- Info Icon Hover -->
+      <div
+        class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded-full p-1 shadow-sm">
+        <lucide-icon [img]="InfoIcon" [size]="16" class="text-blue-600"></lucide-icon>
+      </div>
+
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+        Reserva Emergência
+      </p>
+      <p class="text-xl md:text-2xl font-bold text-gray-900">
+        {{ formatCurrency(summary()?.reserva_emergencia?.meta) }}
+      </p>
+      <p class="text-xs text-blue-600 mt-1 font-medium bg-blue-50 inline-block px-1.5 py-0.5 rounded">
+        Meta: {{ summary()?.reserva_emergencia?.meses_configurados }} meses
+      </p>
+    </div>
+
+    <!-- 4. Receitas Mensais -->
+    <div class="card-base border-l-4 border-emerald-500 relative overflow-hidden group">
+      <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+        <lucide-icon [img]="TrendingUpIcon" [size]="48" class="text-emerald-600"></lucide-icon>
+      </div>
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Receitas Mensais</p>
+      <p class="text-xl md:text-2xl font-bold text-gray-900">
+        {{ formatCurrency(summary()?.total_receitas_mensais) }}
+      </p>
+      <div class="flex items-center gap-1 mt-1">
+        <span class="text-xs text-gray-400">Saldo prev:</span>
+        <span
+          [class.text-emerald-600]="(summary()?.total_receitas_mensais || 0) - (summary()?.total_despesas_mensais || 0) >= 0"
+          [class.text-red-600]="(summary()?.total_receitas_mensais || 0) - (summary()?.total_despesas_mensais || 0) < 0"
+          class="text-xs font-bold">
+          {{ formatCurrency((summary()?.total_receitas_mensais || 0) - (summary()?.total_despesas_mensais || 0)) }}
+        </span>
       </div>
     </div>
+
+  </div>
+  }
+
+  <!-- ── Loading State ── -->
+  @if (loading()) {
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="card-base animate-pulse">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-gray-200"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-3.5 bg-gray-200 rounded w-2/5"></div>
+          <div class="h-2.5 bg-gray-100 rounded w-1/3"></div>
+        </div>
+        <div class="h-3.5 bg-gray-200 rounded w-20"></div>
+      </div>
+    </div>
+    }
   </div>
 
-  <!-- Loading State -->
-  @if (loading()) {
-    <div class="flex items-center justify-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
+  } @else if (bills().length === 0) {
+
+  <!-- ── Empty State ── -->
+  <div class="card-base text-center py-14">
+    <lucide-icon [img]="ReceiptIcon" [size]="48" class="text-gray-200 mx-auto mb-3"></lucide-icon>
+    <p class="text-gray-500 font-medium">Nenhuma conta mensal cadastrada</p>
+    <p class="text-sm text-gray-400 mt-1">Cadastre suas contas fixas como água, luz, internet e seu salário</p>
+    <button (click)="openCreateModal()" class="mt-5 btn-primary px-6 py-2 text-sm">
+      Adicionar Primeira Conta
+    </button>
+  </div>
+
   } @else {
-    @if (bills().length === 0) {
-      <!-- Empty State -->
-      <div class="card-base text-center py-12">
-        <lucide-icon [img]="ReceiptIcon" [size]="48" class="text-gray-300 mx-auto mb-3"></lucide-icon>
-        <p class="text-gray-500">Nenhuma conta mensal cadastrada</p>
-        <p class="text-sm text-gray-400 mt-1">
-          Comece adicionando suas contas fixas como água, luz, internet e assinaturas
-        </p>
-        <button (click)="openCreateModal()" class="mt-4 btn-primary px-6 py-2 text-sm">
-          Adicionar Primeira Conta
-        </button>
+
+  <!-- ══════════════════════════════════
+         SEÇÃO: DESPESAS
+    ══════════════════════════════════ -->
+  @if (despesas().length > 0) {
+  <div class="mb-5">
+
+    <!-- Header da seção -->
+    <button class="w-full flex items-center justify-between mb-2 group"
+      (click)="despesasExpanded.set(!despesasExpanded())">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
+          <lucide-icon [img]="ArrowDownIcon" [size]="14" class="text-red-600"></lucide-icon>
+        </div>
+        <span class="font-semibold text-gray-800 text-sm">Despesas</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+          {{ despesas().length }}
+        </span>
       </div>
-    } @else {
-      <!-- Grid de Contas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (bill of bills(); track bill.id) {
-          <div class="card-base hover:shadow-lg transition-all group relative">
-            <!-- Action Buttons -->
-            <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                (click)="openEditModal(bill)"
-                class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                title="Editar"
-              >
-                <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-600"></lucide-icon>
-              </button>
-              <button
-                (click)="confirmDelete(bill)"
-                class="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                title="Excluir"
-              >
-                <lucide-icon [img]="Trash2Icon" [size]="16" class="text-red-600"></lucide-icon>
-              </button>
-            </div>
+      <lucide-icon [img]="despesasExpanded() ? ChevronUpIcon : ChevronDownIcon" [size]="16"
+        class="text-gray-400 group-hover:text-gray-600 transition-colors"></lucide-icon>
+    </button>
 
-            <!-- Header do Card -->
-            <div class="flex items-start justify-between mb-3">
-              <div class="p-2 bg-primary bg-opacity-10 rounded-lg">
-                <lucide-icon [img]="ReceiptIcon" [size]="20" class="text-primary"></lucide-icon>
-              </div>
-              <span
-                class="text-xs px-2 py-1 rounded-full font-medium"
-                [class]="getPeriodicidadeBadgeClass(bill.periodicidade)"
-              >
-                {{ getPeriodicidadeLabel(bill.periodicidade) }}
-              </span>
-            </div>
+    <!-- Lista de linhas -->
+    @if (despesasExpanded()) {
+    <div class="card-base p-0 overflow-hidden divide-y divide-gray-100">
+      @for (bill of despesas(); track bill.id) {
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
 
-            <!-- Nome e Categoria -->
-            <h4 class="font-bold text-gray-900 mb-1 pr-16">{{ bill.descricao }}</h4>
-            <p class="text-xs text-gray-500 mb-3">{{ bill.subcategoria_nome }}</p>
+        <!-- Ícone / Inicial -->
+        <div class="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+          <span class="text-sm font-bold text-red-600">{{ bill.descricao.charAt(0).toUpperCase() }}</span>
+        </div>
 
-            <!-- Valor e Vencimento -->
-            <div class="border-t border-gray-100 pt-3 space-y-2">
-              <div class="flex justify-between items-center">
-                <span class="text-xs text-gray-500">Valor</span>
-                <span class="font-bold text-gray-900">
-                  @if (bill.valor_previsto) {
-                    {{ formatCurrency(bill.valor_previsto) }}
-                  } @else {
-                    <span class="text-gray-400 text-sm">Variável</span>
-                  }
-                </span>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <span class="text-xs text-gray-500">Vencimento</span>
-                <span class="text-sm font-medium text-gray-700">
-                  Dia {{ bill.dia_execucao }}
-                  @if (bill.periodicidade === 'ANUAL' && bill.mes_execucao) {
-                    de {{ getMesLabel(bill.mes_execucao) }}
-                  }
-                </span>
-              </div>
-
-              @if (bill.conta_nome) {
-                <div class="flex justify-between items-center">
-                  <span class="text-xs text-gray-500">Conta</span>
-                  <span class="text-xs text-gray-600 flex items-center gap-1">
-                    <lucide-icon [img]="WalletIcon" [size]="12"></lucide-icon>
-                    {{ bill.conta_nome }}
-                  </span>
-                </div>
-              }
-            </div>
+        <!-- Info principal -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ bill.descricao }}</p>
+            @if (bill.tipo_agendamento === 'LEMBRETE_VARIAVEL') {
+            <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-medium flex-shrink-0">≈</span>
+            }
           </div>
-        }
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-xs text-gray-400 truncate">{{ bill.subcategoria_nome }}</span>
+            <span class="text-gray-200 text-xs">·</span>
+            <span class="text-xs" [class]="getPeriodicidadeBadgeClass(bill.periodicidade)">
+              {{ getPeriodicidadeLabel(bill.periodicidade) }}
+            </span>
+            <span class="text-gray-200 text-xs">·</span>
+            <span class="text-xs text-gray-400">
+              Dia {{ bill.dia_execucao }}
+              @if (bill.periodicidade === 'ANUAL' && bill.mes_execucao) {
+              /{{ getMesLabel(bill.mes_execucao) }}
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Valor -->
+        <div class="text-right flex-shrink-0">
+          @if (bill.valor_previsto) {
+          <p class="text-sm font-bold text-gray-900">{{ formatCurrency(bill.valor_previsto) }}</p>
+          } @else {
+          <p class="text-xs text-gray-400 italic">A definir</p>
+          }
+          @if (bill.conta_nome) {
+          <p class="text-xs text-gray-400 mt-0.5 flex items-center justify-end gap-0.5">
+            <lucide-icon [img]="WalletIcon" [size]="10"></lucide-icon>
+            {{ bill.conta_nome }}
+          </p>
+          }
+        </div>
+
+        <!-- Ações -->
+        <div class="flex gap-1 flex-shrink-0 ml-1">
+          <button (click)="openEditModal(bill)" class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Editar">
+            <lucide-icon [img]="PencilIcon" [size]="14" class="text-gray-400"></lucide-icon>
+          </button>
+          <button (click)="confirmDelete(bill)" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            title="Remover">
+            <lucide-icon [img]="Trash2Icon" [size]="14" class="text-red-400"></lucide-icon>
+          </button>
+        </div>
+
       </div>
+      }
+    </div>
     }
+  </div>
+  }
+
+  <!-- ══════════════════════════════════
+         SEÇÃO: RECEITAS
+    ══════════════════════════════════ -->
+  @if (receitas().length > 0) {
+  <div class="mb-5">
+
+    <!-- Header da seção -->
+    <button class="w-full flex items-center justify-between mb-2 group"
+      (click)="receitasExpanded.set(!receitasExpanded())">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+          <lucide-icon [img]="ArrowUpIcon" [size]="14" class="text-emerald-600"></lucide-icon>
+        </div>
+        <span class="font-semibold text-gray-800 text-sm">Receitas</span>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+          {{ receitas().length }}
+        </span>
+      </div>
+      <lucide-icon [img]="receitasExpanded() ? ChevronUpIcon : ChevronDownIcon" [size]="16"
+        class="text-gray-400 group-hover:text-gray-600 transition-colors"></lucide-icon>
+    </button>
+
+    <!-- Lista de linhas -->
+    @if (receitasExpanded()) {
+    <div class="card-base p-0 overflow-hidden divide-y divide-gray-100">
+      @for (bill of receitas(); track bill.id) {
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+
+        <!-- Ícone / Inicial -->
+        <div class="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+          <span class="text-sm font-bold text-emerald-600">{{ bill.descricao.charAt(0).toUpperCase() }}</span>
+        </div>
+
+        <!-- Info principal -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ bill.descricao }}</p>
+            @if (bill.tipo_agendamento === 'LEMBRETE_VARIAVEL') {
+            <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-medium flex-shrink-0">≈</span>
+            }
+          </div>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-xs text-gray-400 truncate">{{ bill.subcategoria_nome }}</span>
+            <span class="text-gray-200 text-xs">·</span>
+            <span class="text-xs" [class]="getPeriodicidadeBadgeClass(bill.periodicidade)">
+              {{ getPeriodicidadeLabel(bill.periodicidade) }}
+            </span>
+            <span class="text-gray-200 text-xs">·</span>
+            <span class="text-xs text-gray-400">
+              Dia {{ bill.dia_execucao }}
+              @if (bill.periodicidade === 'ANUAL' && bill.mes_execucao) {
+              /{{ getMesLabel(bill.mes_execucao) }}
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Valor -->
+        <div class="text-right flex-shrink-0">
+          @if (bill.valor_previsto) {
+          <p class="text-sm font-bold text-emerald-600">{{ formatCurrency(bill.valor_previsto) }}</p>
+          } @else {
+          <p class="text-xs text-gray-400 italic">A definir</p>
+          }
+          @if (bill.conta_nome) {
+          <p class="text-xs text-gray-400 mt-0.5 flex items-center justify-end gap-0.5">
+            <lucide-icon [img]="WalletIcon" [size]="10"></lucide-icon>
+            {{ bill.conta_nome }}
+          </p>
+          }
+        </div>
+
+        <!-- Ações -->
+        <div class="flex gap-1 flex-shrink-0 ml-1">
+          <button (click)="openEditModal(bill)" class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Editar">
+            <lucide-icon [img]="PencilIcon" [size]="14" class="text-gray-400"></lucide-icon>
+          </button>
+          <button (click)="confirmDelete(bill)" class="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            title="Remover">
+            <lucide-icon [img]="Trash2Icon" [size]="14" class="text-red-400"></lucide-icon>
+          </button>
+        </div>
+
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+
   }
 </div>
 
-<!-- Bill Modal -->
-<app-bill-modal
-  #billModal
-  (saved)="onBillSaved($event)"
-  (closed)="selectedBill.set(null)"
-></app-bill-modal>
+<!-- ── Bill Modal ── -->
+<app-bill-modal #billModal (saved)="onBillSaved($event)" (closed)="selectedBill.set(null)"></app-bill-modal>
 
-<!-- Delete Confirmation Dialog -->
+<!-- ── Delete Confirmation Dialog ── -->
 @if (showDeleteDialog()) {
-  <div class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex min-h-full items-center justify-center p-4">
-      <!-- Backdrop -->
-      <div
-        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        (click)="cancelDelete()"
-      ></div>
-
-      <!-- Dialog -->
-      <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-6 z-10">
-        <div class="flex items-start gap-4 mb-4">
-          <div class="p-3 bg-red-100 rounded-full flex-shrink-0">
-            <lucide-icon [img]="Trash2Icon" [size]="24" class="text-red-600"></lucide-icon>
-          </div>
-          <div class="flex-1">
-            <h3 class="text-lg font-semibold text-gray-900">Remover Conta Mensal</h3>
-            <p class="text-sm text-gray-600 mt-1">
-              Tem certeza que deseja remover a conta <strong>{{ selectedBill()?.descricao }}</strong>?
-            </p>
-          </div>
+<div class="fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" (click)="cancelDelete()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 z-10">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="p-3 bg-red-100 rounded-xl flex-shrink-0">
+          <lucide-icon [img]="Trash2Icon" [size]="22" class="text-red-600"></lucide-icon>
         </div>
-
-        <div class="flex gap-3 mt-6">
-          <button
-            (click)="cancelDelete()"
-            [disabled]="deleting()"
-            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-          <button
-            (click)="deleteBill()"
-            [disabled]="deleting()"
-            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            @if (deleting()) {
-              <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-              <span>Removendo...</span>
-            } @else {
-              <span>Remover</span>
-            }
-          </button>
+        <div>
+          <h3 class="text-base font-semibold text-gray-900">Remover conta</h3>
+          <p class="text-sm text-gray-500 mt-1">
+            Deseja remover <strong>{{ selectedBill()?.descricao }}</strong>? Esta ação não pode ser desfeita.
+          </p>
         </div>
+      </div>
+      <div class="flex gap-3 mt-5">
+        <button (click)="cancelDelete()" [disabled]="deleting()"
+          class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium text-gray-600 text-sm disabled:opacity-50">
+          Cancelar
+        </button>
+        <button (click)="deleteBill()" [disabled]="deleting()"
+          class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+          @if (deleting()) {
+          <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+          }
+          Remover
+        </button>
       </div>
     </div>
   </div>
+</div>
+}
+
+<!-- ── Detalhes da Reserva Modal ── -->
+@if (showReserveDetails()) {
+<div class="fixed inset-0 z-50 overflow-y-auto">
+  <div class="flex min-h-full items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+      (click)="showReserveDetails.set(false)"></div>
+
+    <!-- Modal Content -->
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10 max-h-[90vh] flex flex-col">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <lucide-icon [img]="ShieldIcon" [size]="20" class="text-blue-600"></lucide-icon>
+          Cálculo da Reserva
+        </h2>
+        <button (click)="showReserveDetails.set(false)" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <lucide-icon [img]="XIcon" [size]="20" class="text-gray-400"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 overflow-y-auto">
+
+        <!-- Explicação -->
+        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+          <p class="text-sm text-blue-800 leading-relaxed font-medium mb-2">Como é calculado?</p>
+          <p class="text-xs text-blue-600 leading-relaxed">
+            A reserva ideal é a soma dos seus gastos essenciais mensais multiplicada pelo número de meses de segurança
+            ({{ summary()?.reserva_emergencia?.meses_configurados }} meses), mais as despesas anuais integrais.
+          </p>
+          <div class="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center text-xs text-blue-800">
+            <span>Gasto Mensal Base:</span>
+            <span class="font-bold">{{ formatCurrency(summary()?.reserva_emergencia?.gasto_mensal_equivalente) }}</span>
+          </div>
+        </div>
+
+        <!-- Lista de Contas -->
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Contas Incluídas</h3>
+
+        <div class="space-y-2">
+          @for (bill of contasReserva(); track bill.id) {
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">
+                {{ bill.descricao.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900">{{ bill.descricao }}</p>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400">{{ getPeriodicidadeLabel(bill.periodicidade) }}</span>
+                  <span class="text-gray-200 text-xs">·</span>
+                  <span class="text-xs text-gray-400">{{ bill.subcategoria_nome }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-bold text-gray-900">{{ formatCurrency(bill.valor_previsto) }}</p>
+            </div>
+          </div>
+          }
+          @if (contasReserva().length === 0) {
+          <div class="text-center py-6 text-gray-400 italic text-sm">
+            Nenhuma conta marcada para reserva. <br>
+            Edite uma conta e marque "Considerar na Reserva".
+          </div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 rounded-b-2xl border-t border-gray-100 text-right">
+        <p class="text-xs text-gray-500 mb-0.5">Total Ideal</p>
+        <p class="text-xl font-bold text-blue-600">{{ formatCurrency(summary()?.reserva_emergencia?.meta) }}</p>
+      </div>
+
+    </div>
+  </div>
+</div>
 }
