@@ -217,7 +217,6 @@ import { finalize } from 'rxjs/operators';
                       formControlName="subcategoria_id"
                       class="input-base"
                       [class.border-red-300]="isFieldInvalid('subcategoria_id')"
-                      [disabled]="subcategories().length === 0"
                     >
                       <option [ngValue]="null">{{ subcategories().length === 0 ? 'Selecione categoria' : 'Selecione...' }}</option>
                       @for (sub of subcategories(); track sub.id) {
@@ -282,16 +281,17 @@ import { finalize } from 'rxjs/operators';
                       <span class="text-gray-400 font-normal text-xs ml-1">(opcional)</span>
                     </label>
                     <div class="relative">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
-                      <input
-                        type="number"
-                        formControlName="valor_previsto"
-                        placeholder="0,00 — deixe vazio se não souber"
-                        step="0.01"
-                        min="0.01"
-                        class="input-base pl-12"
-                      />
-                    </div>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
+                        <input
+                          type="text"
+                          inputmode="numeric"
+                          [value]="formatBRL(form.get('valor_previsto')?.value)"
+                          (input)="onCurrencyInput($event)"
+                          (blur)="onCurrencyBlur()"
+                          placeholder="0,00 — deixe vazio se não souber"
+                          class="input-base pl-12"
+                        />
+                      </div>
                     <p class="valor-hint">💡 Usado para estimar o gasto mensal no painel</p>
                   }
                 </div>
@@ -486,6 +486,7 @@ export class BillModalComponent implements OnInit {
       subcategoria_id: [null, Validators.required],
       conta_id: [null, Validators.required],
       notificar_antes_dias: [3],
+      incluirNaReserva: [false],
     });
   }
 
@@ -516,6 +517,7 @@ export class BillModalComponent implements OnInit {
         subcategoria_id: bill.subcategoria_id,
         conta_id: bill.conta_id,
         notificar_antes_dias: bill.notificar_antes_dias,
+        incluirNaReserva: bill.incluir_na_reserva ?? false,
       });
       // Carregar subcategorias da categoria da conta em edição
       this.loadCategories(bill.subcategoria_id);
@@ -568,10 +570,18 @@ export class BillModalComponent implements OnInit {
     const macroId = this.form.get('macro_categoria')?.value;
     if (macroId) {
       const categoria = this.categories().find(c => c.macro_id === +macroId);
-      this.subcategories.set(categoria?.subcategorias || []);
+      const subs = categoria?.subcategorias || [];
+      this.subcategories.set(subs);
       this.form.patchValue({ subcategoria_id: null });
+      // Habilita/desabilita via FormControl (sem usar [disabled] no template)
+      if (subs.length > 0) {
+        this.form.get('subcategoria_id')?.enable();
+      } else {
+        this.form.get('subcategoria_id')?.disable();
+      }
     } else {
       this.subcategories.set([]);
+      this.form.get('subcategoria_id')?.disable();
     }
   }
 
@@ -581,6 +591,39 @@ export class BillModalComponent implements OnInit {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.form.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  /** Formata o número armazenado no FormControl para exibição (ex: 1234.5 -> '1.234,50') */
+  formatBRL(value: number | null | undefined): string {
+    if (value == null || isNaN(Number(value))) return '';
+    return Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /** Trata o evento de input do campo de moeda */
+  onCurrencyInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Mantém apenas dígitos
+    const digits = input.value.replace(/\D/g, '');
+    if (!digits) {
+      input.value = '';
+      this.form.patchValue({ valor_previsto: null }, { emitEvent: false });
+      return;
+    }
+    // Converte centavos: '12350' -> 123.50
+    const numeric = parseInt(digits, 10) / 100;
+    // Formata para exibição
+    const formatted = numeric.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    input.value = formatted;
+    // Salva o valor numérico puro no FormControl
+    this.form.patchValue({ valor_previsto: numeric });
+  }
+
+  /** Ao sair do campo, garante formatação correta */
+  onCurrencyBlur(): void {
+    const ctrl = this.form.get('valor_previsto');
+    if (ctrl?.value != null) {
+      ctrl.markAsTouched();
+    }
   }
 
   /**

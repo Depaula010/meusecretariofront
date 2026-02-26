@@ -2,78 +2,74 @@
  * Models para Configurações da Aplicação
  */
 
-/**
- * Tipos de API Keys disponíveis
- */
+/** Tipos de API Keys disponíveis */
 export enum ApiKeyType {
   GEMINI = 'gemini',
   WEATHER = 'weather',
   OPENROUTE = 'openroute',
 }
 
-/**
- * Configuração de uma API Key
- */
+/** Configuração de uma API Key */
 export interface ApiKeyConfig {
   type: ApiKeyType;
   useOwnKey: boolean;
   key?: string;
+  hasKey?: boolean;
   isValid?: boolean;
   lastValidated?: Date;
 }
 
-/**
- * Configuração de Notificações
- */
+/** Configuração de Notificações */
 export interface NotificationConfig {
-  morningBriefing: {
-    enabled: boolean;
-    time: string; // HH:mm format
-  };
-  eveningCheckIn: {
-    enabled: boolean;
-    time: string;
-  };
-  financialAlerts: {
-    enabled: boolean;
-    daysBeforeDue: number;
-  };
+  morningBriefing: { enabled: boolean; time: string };
+  eveningCheckIn:  { enabled: boolean; time: string };
+  financialAlerts: { enabled: boolean; daysBeforeDue: number };
 }
 
-/**
- * Endereço Favorito
- */
+/** Endereço Favorito */
 export interface FavoriteAddress {
   id?: string;
-  label: string; // "Casa", "Trabalho", etc.
+  label: string; // "casa" | "trabalho" | "outro"
   address: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-  isDefault?: boolean;
+  coordinates?: { lat: number; lng: number };
 }
 
-/**
- * Configurações Completas do Usuário
- */
+/** Perfil do Usuário */
+export interface UserProfile {
+  id: number;
+  nome: string;
+  email?: string;
+  numero_whatsapp: string;
+  cidade?: string;
+  estado?: string;
+  fuso_horario: string;
+  meses_reserva_emergencia: number;
+}
+
+/** Request para atualização de perfil */
+export interface ProfileUpdateRequest {
+  nome?: string;
+  email?: string;
+  cidade?: string;
+  estado?: string;
+  fuso_horario?: string;
+  meses_reserva_emergencia?: number;
+}
+
+/** Configurações Completas do Usuário */
 export interface UserSettings {
-  userId: string;
   apiKeys: ApiKeyConfig[];
   notifications: NotificationConfig;
   addresses: FavoriteAddress[];
-  preferences: {
-    language: string;
-    timezone: string;
-    currency: string;
-  };
 }
 
-/**
- * Response da API de Configurações
- */
-export interface SettingsResponse {
-  success: boolean;
-  data?: UserSettings;
+/** Response genérica da API */
+export interface ApiResponse<T = unknown> {
+  status: 'success' | 'error';
+  data?: T;
   message?: string;
 }
+
+/** Aliases de conveniência */
+export type SettingsResponse = ApiResponse<UserSettings>;
+export type ProfileResponse  = ApiResponse<UserProfile>;

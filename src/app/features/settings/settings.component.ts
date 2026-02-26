@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
+  User,
   Key,
   Bell,
   MapPin,
@@ -12,63 +13,105 @@ import {
   X,
   Loader,
   Save,
+  Home,
+  Briefcase,
 } from 'lucide-angular';
 import { SettingsService } from '../../core/services/settings.service';
-import { ApiKeyType, ApiKeyConfig, NotificationConfig } from '../../core/models/settings.model';
+import {
+  ApiKeyType,
+  ApiKeyConfig,
+  NotificationConfig,
+  ProfileUpdateRequest,
+} from '../../core/models/settings.model';
 
-/**
- * Settings Component
- *
- * Tela de configurações do assistente:
- * 1. API Keys (BYOK - Bring Your Own Key)
- * 2. Notificações
- * 3. Endereços Favoritos
- */
+type Tab = 'profile' | 'api-keys' | 'notifications' | 'addresses';
+
+interface Toast { message: string; type: 'success' | 'error'; }
+
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss']
+  styleUrls: ['./settings.component.scss'],
 })
 export class SettingsComponent implements OnInit {
-  // Ícones
-  KeyIcon = Key;
-  BellIcon = Bell;
-  MapPinIcon = MapPin;
-  EyeIcon = Eye;
-  EyeOffIcon = EyeOff;
-  CheckIcon = Check;
-  XIcon = X;
-  LoaderIcon = Loader;
-  SaveIcon = Save;
+  // Lucide icons
+  UserIcon      = User;
+  KeyIcon       = Key;
+  BellIcon      = Bell;
+  MapPinIcon    = MapPin;
+  EyeIcon       = Eye;
+  EyeOffIcon    = EyeOff;
+  CheckIcon     = Check;
+  XIcon         = X;
+  LoaderIcon    = Loader;
+  SaveIcon      = Save;
+  HomeIcon      = Home;
+  BriefcaseIcon = Briefcase;
 
-  // Enum para template
   ApiKeyType = ApiKeyType;
 
-  // Estado local
-  selectedTab = signal<'api-keys' | 'notifications' | 'addresses'>('api-keys');
+  public readonly settingsService = inject(SettingsService);
+
+  // ==========================================
+  // Navegação
+  // ==========================================
+  selectedTab = signal<Tab>('profile');
+
+  // ==========================================
+  // Toast
+  // ==========================================
+  toast = signal<Toast | null>(null);
+  private _toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  showToast(message: string, type: 'success' | 'error' = 'success'): void {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this.toast.set({ message, type });
+    this._toastTimer = setTimeout(() => this.toast.set(null), 3500);
+  }
+
+  // ==========================================
+  // Aba Perfil
+  // ==========================================
+  profileForm = signal<ProfileUpdateRequest>({
+    nome: '',
+    email: '',
+    cidade: '',
+    estado: 'SP',
+    fuso_horario: 'America/Sao_Paulo',
+    meses_reserva_emergencia: 6,
+  });
+
+  readonly fusoOptions = [
+    'America/Sao_Paulo',
+    'America/Manaus',
+    'America/Belem',
+    'America/Fortaleza',
+    'America/Recife',
+    'America/Cuiaba',
+    'America/Porto_Velho',
+    'America/Boa_Vista',
+    'America/Rio_Branco',
+    'America/Noronha',
+  ];
+
+  // ==========================================
+  // Aba API Keys
+  // ==========================================
   showKeys = signal<Record<string, boolean>>({
-    [ApiKeyType.GEMINI]: false,
-    [ApiKeyType.WEATHER]: false,
+    [ApiKeyType.GEMINI]:    false,
+    [ApiKeyType.WEATHER]:   false,
     [ApiKeyType.OPENROUTE]: false,
   });
 
-  // Formulários locais
-  apiKeyForms = signal<Record<string, { useOwnKey: boolean; key: string }>>({
-    [ApiKeyType.GEMINI]: { useOwnKey: false, key: '' },
-    [ApiKeyType.WEATHER]: { useOwnKey: false, key: '' },
-    [ApiKeyType.OPENROUTE]: { useOwnKey: false, key: '' },
+  apiKeyForms = signal<Record<string, { useOwnKey: boolean; key: string; hasKey: boolean }>>({
+    [ApiKeyType.GEMINI]:    { useOwnKey: false, key: '', hasKey: false },
+    [ApiKeyType.WEATHER]:   { useOwnKey: false, key: '', hasKey: false },
+    [ApiKeyType.OPENROUTE]: { useOwnKey: false, key: '', hasKey: false },
   });
 
-  notificationForm = signal<NotificationConfig>({
-    morningBriefing: { enabled: true, time: '08:00' },
-    eveningCheckIn: { enabled: true, time: '20:00' },
-    financialAlerts: { enabled: true, daysBeforeDue: 3 },
-  });
-
-  // Mensagens de info para cada API
-  apiKeyInfo = {
+  readonly apiKeyInfo = {
     [ApiKeyType.GEMINI]: {
       name: 'Google Gemini AI',
       description: 'Necessária para funcionalidades de IA e assistente inteligente',
@@ -89,144 +132,228 @@ export class SettingsComponent implements OnInit {
     },
   };
 
-  constructor(public settingsService: SettingsService) {}
+  // ==========================================
+  // Aba Notificações
+  // ==========================================
+  notificationForm = signal<NotificationConfig>({
+    morningBriefing: { enabled: true, time: '07:00' },
+    eveningCheckIn:  { enabled: true, time: '19:00' },
+    financialAlerts: { enabled: true, daysBeforeDue: 3 },
+  });
 
+  // ==========================================
+  // Aba Endereços
+  // ==========================================
+  newAddress = signal<{ label: string; address: string }>({ label: 'casa', address: '' });
+
+  // ==========================================
+  // Lifecycle
+  // ==========================================
   ngOnInit(): void {
-    // Carregar configurações do usuário (mock userId por enquanto)
-    const userId = 'user-demo';
-    this.loadSettings(userId);
+    this._loadAll();
   }
 
-  /**
-   * Carregar configurações
-   */
-  loadSettings(userId: string): void {
-    this.settingsService.loadSettings(userId).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          // Preencher formulários com dados carregados
-          this.initializeForms(response.data.apiKeys, response.data.notifications);
+  private _loadAll(): void {
+    this.settingsService.getProfile().subscribe({
+      next: res => {
+        if (res.status === 'success' && res.data) {
+          const p = res.data;
+          this.profileForm.set({
+            nome:                     p.nome ?? '',
+            email:                    p.email ?? '',
+            cidade:                   p.cidade ?? '',
+            estado:                   p.estado ?? 'SP',
+            fuso_horario:             p.fuso_horario ?? 'America/Sao_Paulo',
+            meses_reserva_emergencia: p.meses_reserva_emergencia ?? 6,
+          });
         }
       },
-      error: (error) => {
-        console.error('Erro ao carregar configurações:', error);
-      }
+    });
+
+    this.settingsService.loadSettings().subscribe({
+      next: res => {
+        if (res.status === 'success' && res.data) {
+          this._syncApiKeyForms(res.data.apiKeys);
+          if (res.data.notifications) {
+            this.notificationForm.set(res.data.notifications);
+          }
+        }
+      },
     });
   }
 
-  /**
-   * Inicializar formulários com dados carregados
-   */
-  initializeForms(apiKeys: ApiKeyConfig[], notifications: NotificationConfig): void {
-    // API Keys
-    const forms: any = {};
-    apiKeys.forEach(key => {
-      forms[key.type] = {
-        useOwnKey: key.useOwnKey,
-        key: key.key || '',
-      };
+  private _syncApiKeyForms(apiKeys: ApiKeyConfig[]): void {
+    const forms = { ...this.apiKeyForms() };
+    apiKeys.forEach(k => {
+      forms[k.type] = { useOwnKey: k.useOwnKey, key: k.key ?? '', hasKey: k.hasKey ?? false };
     });
     this.apiKeyForms.set(forms);
-
-    // Notificações
-    if (notifications) {
-      this.notificationForm.set(notifications);
-    }
   }
 
-  /**
-   * Toggle visibilidade da chave
-   */
+  // ==========================================
+  // Ações — Perfil
+  // ==========================================
+  saveProfile(): void {
+    const form = this.profileForm();
+    if (!form.nome || form.nome.trim().length < 2) {
+      this.showToast('Nome deve ter pelo menos 2 caracteres', 'error');
+      return;
+    }
+    this.settingsService.updateProfile(form).subscribe({
+      next: res => {
+        if (res.status === 'success') {
+          this.showToast('Perfil atualizado com sucesso!');
+        } else {
+          this.showToast(res.message ?? 'Erro ao salvar perfil', 'error');
+        }
+      },
+      error: () => this.showToast('Erro ao salvar perfil', 'error'),
+    });
+  }
+
+  updateProfileField(field: keyof ProfileUpdateRequest, value: any): void {
+    this.profileForm.update(cur => ({ ...cur, [field]: value }));
+  }
+
+  // ==========================================
+  // Ações — API Keys
+  // ==========================================
   toggleKeyVisibility(type: ApiKeyType): void {
-    this.showKeys.update(current => ({
-      ...current,
-      [type]: !current[type]
+    this.showKeys.update(cur => ({ ...cur, [type]: !cur[type] }));
+  }
+
+  updateApiKeyForm(type: ApiKeyType, field: 'useOwnKey' | 'key', value: any): void {
+    this.apiKeyForms.update(cur => ({
+      ...cur,
+      [type]: { ...cur[type], [field]: value },
     }));
   }
 
-  /**
-   * Salvar API Key
-   */
   saveApiKey(type: ApiKeyType): void {
     const form = this.apiKeyForms()[type];
-
     if (form.useOwnKey && !form.key) {
-      alert('Por favor, insira uma chave válida');
+      this.showToast('Por favor, insira uma chave válida', 'error');
       return;
     }
-
-    const apiKeyConfig: ApiKeyConfig = {
+    const apiKey: ApiKeyConfig = {
       type,
       useOwnKey: form.useOwnKey,
       key: form.useOwnKey ? form.key : undefined,
     };
-
-    const userId = 'user-demo'; // TODO: Pegar do AuthService
-    this.settingsService.updateApiKey(userId, apiKeyConfig).subscribe({
-      next: (response) => {
-        if (response.success) {
-          alert('API Key salva com sucesso!');
+    this.settingsService.updateApiKey(apiKey).subscribe({
+      next: res => {
+        if (res.status === 'success') {
+          this.showToast('Chave API salva com sucesso!');
+          this.apiKeyForms.update(cur => ({
+            ...cur,
+            [type]: { ...cur[type], hasKey: form.useOwnKey && !!form.key },
+          }));
+        } else {
+          this.showToast(res.message ?? 'Erro ao salvar chave API', 'error');
         }
       },
-      error: (error) => {
-        console.error('Erro ao salvar API Key:', error);
-        alert('Erro ao salvar API Key');
-      }
+      error: () => this.showToast('Erro ao salvar chave API', 'error'),
     });
   }
 
-  /**
-   * Validar API Key
-   */
   validateApiKey(type: ApiKeyType): void {
     const form = this.apiKeyForms()[type];
-
     if (!form.key) {
-      alert('Insira uma chave para validar');
+      this.showToast('Insira uma chave para validar', 'error');
       return;
     }
-
     this.settingsService.validateApiKey(type, form.key).subscribe({
-      next: (isValid) => {
+      next: isValid => {
         if (isValid) {
-          alert('✓ Chave válida!');
+          this.showToast('Chave válida!');
         } else {
-          alert('✗ Chave inválida');
-        }
-      }
-    });
-  }
-
-  /**
-   * Salvar configurações de notificações
-   */
-  saveNotifications(): void {
-    const userId = 'user-demo'; // TODO: Pegar do AuthService
-    this.settingsService.updateNotifications(userId, this.notificationForm()).subscribe({
-      next: (response) => {
-        if (response.success) {
-          alert('Notificações atualizadas com sucesso!');
+          this.showToast('Chave inválida ou sem permissão', 'error');
         }
       },
-      error: (error) => {
-        console.error('Erro ao salvar notificações:', error);
-        alert('Erro ao salvar notificações');
-      }
     });
   }
 
-  /**
-   * Mudar tab ativa
-   */
-  setTab(tab: 'api-keys' | 'notifications' | 'addresses'): void {
-    this.selectedTab.set(tab);
-  }
-
-  /**
-   * Computed: Verificar se formulário de API Key está válido
-   */
   isApiKeyFormValid(type: ApiKeyType): boolean {
     const form = this.apiKeyForms()[type];
     return !form.useOwnKey || (form.useOwnKey && form.key.length > 0);
+  }
+
+  // ==========================================
+  // Ações — Notificações
+  // ==========================================
+  saveNotifications(): void {
+    this.settingsService.updateNotifications(this.notificationForm()).subscribe({
+      next: res => {
+        if (res.status === 'success') {
+          this.showToast('Notificações atualizadas com sucesso!');
+        } else {
+          this.showToast(res.message ?? 'Erro ao salvar notificações', 'error');
+        }
+      },
+      error: () => this.showToast('Erro ao salvar notificações', 'error'),
+    });
+  }
+
+  updateNotifField(section: keyof NotificationConfig, field: string, value: any): void {
+    this.notificationForm.update(cur => ({
+      ...cur,
+      [section]: { ...(cur[section] as any), [field]: value },
+    }));
+  }
+
+  // ==========================================
+  // Ações — Endereços
+  // ==========================================
+  saveAddress(): void {
+    const addr = this.newAddress();
+    if (!addr.address.trim()) {
+      this.showToast('Informe o endereço', 'error');
+      return;
+    }
+    this.settingsService.saveAddress({ label: addr.label, address: addr.address }).subscribe({
+      next: res => {
+        if (res.status === 'success') {
+          this.showToast('Endereço salvo com sucesso!');
+          this.newAddress.set({ label: 'casa', address: '' });
+        } else {
+          this.showToast(res.message ?? 'Erro ao salvar endereço', 'error');
+        }
+      },
+      error: () => this.showToast('Erro ao salvar endereço', 'error'),
+    });
+  }
+
+  removeAddress(label: string): void {
+    this.settingsService.removeAddress(label).subscribe({
+      next: res => {
+        if (res.status === 'success') {
+          this.showToast('Endereço removido!');
+        } else {
+          this.showToast(res.message ?? 'Erro ao remover endereço', 'error');
+        }
+      },
+      error: () => this.showToast('Erro ao remover endereço', 'error'),
+    });
+  }
+
+  updateNewAddressLabel(value: string): void {
+    this.newAddress.update(cur => ({ ...cur, label: value }));
+  }
+
+  updateNewAddressText(value: string): void {
+    this.newAddress.update(cur => ({ ...cur, address: value }));
+  }
+
+  // ==========================================
+  // Navegação
+  // ==========================================
+  setTab(tab: Tab): void {
+    this.selectedTab.set(tab);
+  }
+
+  getLabelIcon(label: string): any {
+    if (label === 'casa')     return this.HomeIcon;
+    if (label === 'trabalho') return this.BriefcaseIcon;
+    return this.MapPinIcon;
   }
 }

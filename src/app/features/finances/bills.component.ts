@@ -29,6 +29,7 @@ import { finalize } from 'rxjs/operators';
 import { FinancesService } from './services/finances.service';
 import { ScheduledBill, BillsSummary, BankAccount } from './models/finances.model';
 import { BillModalComponent } from './components/bill-modal.component';
+import { ToastService } from '../../shared/services/toast.service';
 
 /**
  * Bills Component
@@ -166,7 +167,7 @@ export class BillsComponent implements OnInit {
     DIARIA: 'Diária', SEMANAL: 'Semanal', QUINZENAL: 'Quinzenal', MENSAL: 'Mensal', ANUAL: 'Anual',
   };
 
-  constructor(private financesService: FinancesService) { }
+  constructor(private financesService: FinancesService, private toast: ToastService) { }
 
   ngOnInit(): void {
     this.loadAll();
@@ -187,7 +188,10 @@ export class BillsComponent implements OnInit {
           this.summary.set(summary);
           this.accounts.set(accounts);
         },
-        error: (err) => this.error.set(err.message || 'Erro ao carregar dados.'),
+        error: (err) => {
+          this.error.set(err.message || 'Erro ao carregar dados.');
+          this.toast.error('Erro ao carregar', err.message || 'Não foi possível buscar as contas mensais.');
+        },
       });
   }
 
@@ -232,16 +236,20 @@ export class BillsComponent implements OnInit {
       next: () => {
         this.showDeleteDialog.set(false);
         this.selectedBill.set(null);
+        this.toast.success('Conta removida', 'A conta mensal foi removida com sucesso.');
         this.loadAll();
       },
       error: (err) => {
         this.error.set(err.message || 'Erro ao remover conta mensal');
         this.showDeleteDialog.set(false);
+        this.toast.error('Erro ao remover', err.message || 'Não foi possível remover a conta.');
       }
     });
   }
 
-  onBillSaved(_bill: ScheduledBill): void {
+  onBillSaved(bill: ScheduledBill): void {
+    const msg = bill.descricao ? `"${bill.descricao}" salva com sucesso.` : 'Conta salva com sucesso.';
+    this.toast.success('Conta salva! ✓', msg);
     this.loadAll();
   }
 

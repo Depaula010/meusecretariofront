@@ -1,298 +1,518 @@
 <div class="max-w-7xl mx-auto w-full">
+
+  <!-- Toast Notification -->
+  @if (toast()) {
+    <div
+      class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium
+             flex items-center gap-2 transition-all duration-300"
+      [class.bg-emerald-600]="toast()!.type === 'success'"
+      [class.bg-red-600]="toast()!.type === 'error'"
+    >
+      @if (toast()!.type === 'success') {
+        <lucide-icon [img]="CheckIcon" [size]="16"></lucide-icon>
+      } @else {
+        <lucide-icon [img]="XIcon" [size]="16"></lucide-icon>
+      }
+      <span>{{ toast()!.message }}</span>
+    </div>
+  }
+
   <!-- Header -->
   <div class="mb-6 md:mb-8">
-    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">Configurações do Assistente</h1>
-    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">Personalize seu assistente financeiro e configure integrações</p>
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">Configurações</h1>
+    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">Gerencie seu perfil e personalize seu assistente financeiro</p>
   </div>
 
   <!-- Tabs -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
     <div class="border-b border-gray-200 overflow-x-auto">
-      <nav class="flex space-x-4 md:space-x-8 px-4 md:px-6 min-w-max" aria-label="Tabs">
+      <nav class="flex space-x-0 px-2 md:px-4 min-w-max" aria-label="Tabs">
+
+        <!-- Tab Perfil -->
+        <button
+          (click)="setTab('profile')"
+          [class.border-primary]="selectedTab() === 'profile'"
+          [class.text-primary]="selectedTab() === 'profile'"
+          [class.border-transparent]="selectedTab() !== 'profile'"
+          [class.text-gray-500]="selectedTab() !== 'profile'"
+          class="flex items-center gap-2 py-4 px-3 md:px-4 border-b-2 font-medium text-sm transition-colors hover:text-primary whitespace-nowrap"
+        >
+          <lucide-icon [img]="UserIcon" [size]="16"></lucide-icon>
+          <span>Perfil</span>
+        </button>
+
+        <!-- Tab API Keys -->
         <button
           (click)="setTab('api-keys')"
           [class.border-primary]="selectedTab() === 'api-keys'"
           [class.text-primary]="selectedTab() === 'api-keys'"
           [class.border-transparent]="selectedTab() !== 'api-keys'"
           [class.text-gray-500]="selectedTab() !== 'api-keys'"
-          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+          class="flex items-center gap-2 py-4 px-3 md:px-4 border-b-2 font-medium text-sm transition-colors hover:text-primary whitespace-nowrap"
         >
-          <lucide-icon [img]="KeyIcon" [size]="18"></lucide-icon>
+          <lucide-icon [img]="KeyIcon" [size]="16"></lucide-icon>
           <span>API Keys</span>
         </button>
 
+        <!-- Tab Notificações -->
         <button
           (click)="setTab('notifications')"
           [class.border-primary]="selectedTab() === 'notifications'"
           [class.text-primary]="selectedTab() === 'notifications'"
           [class.border-transparent]="selectedTab() !== 'notifications'"
           [class.text-gray-500]="selectedTab() !== 'notifications'"
-          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+          class="flex items-center gap-2 py-4 px-3 md:px-4 border-b-2 font-medium text-sm transition-colors hover:text-primary whitespace-nowrap"
         >
-          <lucide-icon [img]="BellIcon" [size]="18"></lucide-icon>
+          <lucide-icon [img]="BellIcon" [size]="16"></lucide-icon>
           <span>Notificações</span>
         </button>
 
+        <!-- Tab Endereços -->
         <button
           (click)="setTab('addresses')"
           [class.border-primary]="selectedTab() === 'addresses'"
           [class.text-primary]="selectedTab() === 'addresses'"
           [class.border-transparent]="selectedTab() !== 'addresses'"
           [class.text-gray-500]="selectedTab() !== 'addresses'"
-          class="flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors hover:text-primary"
+          class="flex items-center gap-2 py-4 px-3 md:px-4 border-b-2 font-medium text-sm transition-colors hover:text-primary whitespace-nowrap"
         >
-          <lucide-icon [img]="MapPinIcon" [size]="18"></lucide-icon>
+          <lucide-icon [img]="MapPinIcon" [size]="16"></lucide-icon>
           <span>Endereços</span>
         </button>
+
       </nav>
     </div>
 
     <!-- Tab Content -->
     <div class="p-4 md:p-6 overflow-x-hidden">
-      <!-- API Keys Tab -->
+
+      <!-- ========================
+           ABA: PERFIL
+           ======================== -->
+      @if (selectedTab() === 'profile') {
+        <div class="space-y-6">
+
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-900 mb-1">Dados do Perfil</h3>
+            <p class="text-sm text-blue-700">Informações pessoais e preferências da sua conta</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <!-- Nome -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nome completo <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [ngModel]="profileForm().nome"
+                (ngModelChange)="updateProfileField('nome', $event)"
+                placeholder="Seu nome"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+              />
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+              <input
+                type="email"
+                [ngModel]="profileForm().email"
+                (ngModelChange)="updateProfileField('email', $event)"
+                placeholder="seu@email.com"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+              />
+            </div>
+
+            <!-- Cidade -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+              <input
+                type="text"
+                [ngModel]="profileForm().cidade"
+                (ngModelChange)="updateProfileField('cidade', $event)"
+                placeholder="São Paulo"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+              />
+            </div>
+
+            <!-- Estado -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Estado (UF)</label>
+              <input
+                type="text"
+                [ngModel]="profileForm().estado"
+                (ngModelChange)="updateProfileField('estado', $event)"
+                placeholder="SP"
+                maxlength="2"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm uppercase"
+              />
+            </div>
+
+            <!-- Fuso Horário -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fuso Horário</label>
+              <select
+                [ngModel]="profileForm().fuso_horario"
+                (ngModelChange)="updateProfileField('fuso_horario', $event)"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm bg-white"
+              >
+                @for (fuso of fusoOptions; track fuso) {
+                  <option [value]="fuso">{{ fuso }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Meses Reserva de Emergência -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Meses de Reserva de Emergência
+              </label>
+              <div class="flex items-center gap-3">
+                <input
+                  type="number"
+                  [ngModel]="profileForm().meses_reserva_emergencia"
+                  (ngModelChange)="updateProfileField('meses_reserva_emergencia', +$event)"
+                  min="1"
+                  max="36"
+                  class="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                />
+                <span class="text-sm text-gray-600">meses (recomendado: 6)</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Usado para calcular sua meta de reserva de emergência no dashboard</p>
+            </div>
+
+          </div>
+
+          <!-- Botão Salvar -->
+          <div class="flex justify-end pt-2">
+            <button
+              (click)="saveProfile()"
+              [disabled]="settingsService.loading()"
+              class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              @if (settingsService.loading()) {
+                <lucide-icon [img]="LoaderIcon" [size]="18" class="animate-spin"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="SaveIcon" [size]="18"></lucide-icon>
+              }
+              <span>Salvar Perfil</span>
+            </button>
+          </div>
+
+        </div>
+      }
+
+      <!-- ========================
+           ABA: API KEYS
+           ======================== -->
       @if (selectedTab() === 'api-keys') {
         <div class="space-y-6">
-          <!-- Header da seção -->
+
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 class="font-semibold text-blue-900 mb-1">🔑 Bring Your Own Key (BYOK)</h3>
+            <h3 class="font-semibold text-blue-900 mb-1">Bring Your Own Key (BYOK)</h3>
             <p class="text-sm text-blue-700">
-              Use suas próprias chaves de API para maior controle e privacidade. Caso contrário, usaremos as chaves do sistema (com limite de uso compartilhado).
+              Use suas próprias chaves de API para maior controle e privacidade.
+              Caso contrário, usaremos as chaves do sistema (com limite de uso compartilhado).
             </p>
           </div>
 
-          <!-- Gemini API Key -->
           @for (keyType of [ApiKeyType.GEMINI, ApiKeyType.WEATHER, ApiKeyType.OPENROUTE]; track keyType) {
-            <div class="border border-gray-200 rounded-lg p-4 md:p-6 overflow-hidden">
+            <div class="border border-gray-200 rounded-lg p-4 md:p-6">
+
+              <!-- Cabeçalho do provedor -->
               <div class="flex items-start justify-between mb-4">
                 <div class="flex-1 min-w-0 pr-2">
-                  <h4 class="text-base md:text-lg font-semibold text-gray-900 flex items-center space-x-2 flex-wrap">
-                    <lucide-icon [img]="KeyIcon" [size]="20" class="text-primary flex-shrink-0"></lucide-icon>
-                    <span class="break-words">{{ apiKeyInfo[keyType].name }}</span>
+                  <h4 class="text-base font-semibold text-gray-900 flex items-center gap-2">
+                    <lucide-icon [img]="KeyIcon" [size]="18" class="text-primary flex-shrink-0"></lucide-icon>
+                    <span>{{ apiKeyInfo[keyType].name }}</span>
+                    @if (apiKeyForms()[keyType].hasKey) {
+                      <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-normal">Configurada</span>
+                    }
                   </h4>
-                  <p class="text-xs md:text-sm text-gray-600 mt-1 break-words">{{ apiKeyInfo[keyType].description }}</p>
-                  <a
-                    [href]="apiKeyInfo[keyType].link"
-                    target="_blank"
-                    class="text-xs md:text-sm text-primary hover:underline mt-1 inline-block break-all"
-                  >
+                  <p class="text-xs text-gray-600 mt-1">{{ apiKeyInfo[keyType].description }}</p>
+                  <a [href]="apiKeyInfo[keyType].link" target="_blank" rel="noopener noreferrer"
+                     class="text-xs text-primary hover:underline mt-1 inline-block">
                     Obter chave de API →
                   </a>
                 </div>
               </div>
 
-              <!-- Toggle: Usar minha chave -->
-              <div class="flex items-start md:items-center justify-between gap-3 bg-gray-50 rounded-lg p-3 md:p-4 mb-4">
+              <!-- Toggle usar minha chave -->
+              <div class="flex items-center justify-between gap-3 bg-gray-50 rounded-lg p-3 mb-4">
                 <div class="flex-1 min-w-0">
-                  <label class="text-sm md:text-base font-medium text-gray-900 break-words">Usar minha própria chave</label>
-                  <p class="text-xs md:text-sm text-gray-600 break-words">Desabilite para usar a chave compartilhada do sistema</p>
+                  <label class="text-sm font-medium text-gray-900">Usar minha própria chave</label>
+                  <p class="text-xs text-gray-500">Desabilite para usar a chave compartilhada do sistema</p>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                   <input
                     type="checkbox"
-                    [(ngModel)]="apiKeyForms()[keyType].useOwnKey"
+                    [ngModel]="apiKeyForms()[keyType].useOwnKey"
+                    (ngModelChange)="updateApiKeyForm(keyType, 'useOwnKey', $event)"
                     class="sr-only peer"
                   />
                   <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
 
-              <!-- Input da chave (se "Usar minha chave" estiver ativo) -->
+              <!-- Input da chave -->
               @if (apiKeyForms()[keyType].useOwnKey) {
                 <div class="space-y-3">
                   <div class="relative">
                     <input
                       [type]="showKeys()[keyType] ? 'text' : 'password'"
-                      [(ngModel)]="apiKeyForms()[keyType].key"
+                      [ngModel]="apiKeyForms()[keyType].key"
+                      (ngModelChange)="updateApiKeyForm(keyType, 'key', $event)"
                       [placeholder]="apiKeyInfo[keyType].placeholder"
                       class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-mono text-sm"
                     />
-                    <button
-                      (click)="toggleKeyVisibility(keyType)"
-                      type="button"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      <lucide-icon
-                        [img]="showKeys()[keyType] ? EyeOffIcon : EyeIcon"
-                        [size]="20"
-                      ></lucide-icon>
+                    <button (click)="toggleKeyVisibility(keyType)" type="button"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                      <lucide-icon [img]="showKeys()[keyType] ? EyeOffIcon : EyeIcon" [size]="18"></lucide-icon>
                     </button>
                   </div>
 
-                  <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <div class="flex flex-col sm:flex-row gap-2">
                     <button
                       (click)="validateApiKey(keyType)"
-                      [disabled]="!apiKeyForms()[keyType].key"
-                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm font-medium"
+                      [disabled]="!apiKeyForms()[keyType].key || settingsService.loading()"
+                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                     >
                       Validar Chave
                     </button>
                     <button
                       (click)="saveApiKey(keyType)"
-                      [disabled]="!isApiKeyFormValid(keyType)"
-                      class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm font-medium flex items-center justify-center space-x-2"
+                      [disabled]="!isApiKeyFormValid(keyType) || settingsService.loading()"
+                      class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center justify-center gap-2"
                     >
-                      <lucide-icon [img]="SaveIcon" [size]="16"></lucide-icon>
+                      <lucide-icon [img]="SaveIcon" [size]="15"></lucide-icon>
                       <span>Salvar</span>
                     </button>
                   </div>
                 </div>
               } @else {
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                  ℹ️ Usando chave compartilhada do sistema (limite de requisições aplicável)
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                  Usando chave compartilhada do sistema (limite de requisições aplicável)
                 </div>
               }
+
             </div>
           }
+
         </div>
       }
 
-      <!-- Notifications Tab -->
+      <!-- ========================
+           ABA: NOTIFICAÇÕES
+           ======================== -->
       @if (selectedTab() === 'notifications') {
         <div class="space-y-6">
-          <!-- Header da seção -->
+
           <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <h3 class="font-semibold text-purple-900 mb-1">🔔 Configurações de Notificações</h3>
-            <p class="text-sm text-purple-700">
-              Configure como e quando deseja receber alertas do seu assistente financeiro
-            </p>
+            <h3 class="font-semibold text-purple-900 mb-1">Configurações de Notificações</h3>
+            <p class="text-sm text-purple-700">Configure como e quando deseja receber alertas do assistente</p>
           </div>
 
           <!-- Resumo Matinal -->
-          <div class="border border-gray-200 rounded-lg p-6">
+          <div class="border border-gray-200 rounded-lg p-5">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <h4 class="text-lg font-semibold text-gray-900">☀️ Resumo Matinal</h4>
-                <p class="text-sm text-gray-600 mt-1">
-                  Receba um resumo diário das suas finanças, clima e agenda
-                </p>
+                <h4 class="text-base font-semibold text-gray-900">☀️ Resumo Matinal</h4>
+                <p class="text-sm text-gray-500 mt-1">Receba um resumo diário das suas finanças, clima e agenda</p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
                 <input
                   type="checkbox"
-                  [(ngModel)]="notificationForm().morningBriefing.enabled"
+                  [ngModel]="notificationForm().morningBriefing.enabled"
+                  (ngModelChange)="updateNotifField('morningBriefing', 'enabled', $event)"
                   class="sr-only peer"
                 />
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
-
             @if (notificationForm().morningBriefing.enabled) {
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Horário de envio</label>
                 <input
                   type="time"
-                  [(ngModel)]="notificationForm().morningBriefing.time"
-                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                  [ngModel]="notificationForm().morningBriefing.time"
+                  (ngModelChange)="updateNotifField('morningBriefing', 'time', $event)"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
                 />
               </div>
             }
           </div>
 
           <!-- Check-in Noturno -->
-          <div class="border border-gray-200 rounded-lg p-6">
+          <div class="border border-gray-200 rounded-lg p-5">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <h4 class="text-lg font-semibold text-gray-900">🌙 Check-in Noturno</h4>
-                <p class="text-sm text-gray-600 mt-1">
-                  Registro de despesas do dia e preparação para amanhã
-                </p>
+                <h4 class="text-base font-semibold text-gray-900">🌙 Check-in Noturno</h4>
+                <p class="text-sm text-gray-500 mt-1">Registro de despesas do dia (disponível entre 18:00 e 23:00)</p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
                 <input
                   type="checkbox"
-                  [(ngModel)]="notificationForm().eveningCheckIn.enabled"
+                  [ngModel]="notificationForm().eveningCheckIn.enabled"
+                  (ngModelChange)="updateNotifField('eveningCheckIn', 'enabled', $event)"
                   class="sr-only peer"
                 />
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
-
             @if (notificationForm().eveningCheckIn.enabled) {
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Horário (entre 18:00 e 23:00)</label>
                 <input
                   type="time"
-                  [(ngModel)]="notificationForm().eveningCheckIn.time"
-                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                  [ngModel]="notificationForm().eveningCheckIn.time"
+                  (ngModelChange)="updateNotifField('eveningCheckIn', 'time', $event)"
+                  min="18:00"
+                  max="23:00"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
                 />
               </div>
             }
           </div>
 
           <!-- Alertas Financeiros -->
-          <div class="border border-gray-200 rounded-lg p-6">
+          <div class="border border-gray-200 rounded-lg p-5">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <h4 class="text-lg font-semibold text-gray-900">💰 Alertas Financeiros</h4>
-                <p class="text-sm text-gray-600 mt-1">
-                  Notificações de contas a vencer e vencimentos de cartão
-                </p>
+                <h4 class="text-base font-semibold text-gray-900">💰 Alertas Financeiros</h4>
+                <p class="text-sm text-gray-500 mt-1">Notificações de contas a vencer e vencimentos de cartão</p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
                 <input
                   type="checkbox"
-                  [(ngModel)]="notificationForm().financialAlerts.enabled"
+                  [ngModel]="notificationForm().financialAlerts.enabled"
+                  (ngModelChange)="updateNotifField('financialAlerts', 'enabled', $event)"
                   class="sr-only peer"
                 />
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
-
             @if (notificationForm().financialAlerts.enabled) {
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Alertar com quantos dias de antecedência?
-                </label>
+              <div class="flex items-center gap-3">
                 <input
                   type="number"
-                  [(ngModel)]="notificationForm().financialAlerts.daysBeforeDue"
+                  [ngModel]="notificationForm().financialAlerts.daysBeforeDue"
+                  (ngModelChange)="updateNotifField('financialAlerts', 'daysBeforeDue', +$event)"
                   min="1"
                   max="30"
-                  class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-24"
+                  class="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm"
                 />
-                <span class="ml-2 text-sm text-gray-600">dias antes</span>
+                <span class="text-sm text-gray-600">dias antes do vencimento</span>
               </div>
             }
           </div>
 
-          <!-- Botão de salvar -->
+          <!-- Botão Salvar -->
           <div class="flex justify-end">
             <button
               (click)="saveNotifications()"
-              class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center space-x-2"
+              [disabled]="settingsService.loading()"
+              class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
             >
-              <lucide-icon [img]="SaveIcon" [size]="18"></lucide-icon>
+              @if (settingsService.loading()) {
+                <lucide-icon [img]="LoaderIcon" [size]="18" class="animate-spin"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="SaveIcon" [size]="18"></lucide-icon>
+              }
               <span>Salvar Notificações</span>
             </button>
           </div>
+
         </div>
       }
 
-      <!-- Addresses Tab -->
+      <!-- ========================
+           ABA: ENDEREÇOS
+           ======================== -->
       @if (selectedTab() === 'addresses') {
         <div class="space-y-6">
+
           <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 class="font-semibold text-green-900 mb-1">📍 Endereços Favoritos</h3>
+            <h3 class="font-semibold text-green-900 mb-1">Endereços Favoritos</h3>
             <p class="text-sm text-green-700">
-              Configure endereços frequentes para rotas e deslocamentos
+              Configure até 3 endereços (Casa, Trabalho, Outro) para rotas e deslocamentos
             </p>
           </div>
 
-          <div class="text-center py-12 text-gray-500">
-            Em desenvolvimento...
+          <!-- Lista de endereços existentes -->
+          @if (settingsService.addresses().length > 0) {
+            <div class="space-y-3">
+              @for (addr of settingsService.addresses(); track addr.label) {
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <lucide-icon [img]="getLabelIcon(addr.label)" [size]="18" class="text-primary flex-shrink-0"></lucide-icon>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 capitalize">{{ addr.label }}</p>
+                      <p class="text-xs text-gray-500 truncate">{{ addr.address }}</p>
+                    </div>
+                  </div>
+                  <button
+                    (click)="removeAddress(addr.label)"
+                    class="ml-3 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                    title="Remover endereço"
+                  >
+                    <lucide-icon [img]="XIcon" [size]="16"></lucide-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-8 text-gray-400">
+              <lucide-icon [img]="MapPinIcon" [size]="36" class="mx-auto mb-2 opacity-40"></lucide-icon>
+              <p class="text-sm">Nenhum endereço configurado</p>
+            </div>
+          }
+
+          <!-- Formulário para novo endereço -->
+          <div class="border border-dashed border-gray-300 rounded-lg p-5 space-y-4">
+            <h4 class="text-sm font-semibold text-gray-700">Adicionar / Atualizar Endereço</h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                <select
+                  [ngModel]="newAddress().label"
+                  (ngModelChange)="updateNewAddressLabel($event)"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                >
+                  <option value="casa">🏠 Casa</option>
+                  <option value="trabalho">💼 Trabalho</option>
+                  <option value="outro">📍 Outro</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Endereço completo</label>
+                <input
+                  type="text"
+                  [ngModel]="newAddress().address"
+                  (ngModelChange)="updateNewAddressText($event)"
+                  placeholder="Rua, número, bairro, cidade"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                (click)="saveAddress()"
+                [disabled]="!newAddress().address.trim() || settingsService.loading()"
+                class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+              >
+                <lucide-icon [img]="SaveIcon" [size]="15"></lucide-icon>
+                <span>Salvar Endereço</span>
+              </button>
+            </div>
           </div>
+
         </div>
       }
+
     </div>
   </div>
 
-  <!-- Loading Overlay -->
-  @if (settingsService.loading()) {
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-        <lucide-icon [img]="LoaderIcon" [size]="24" class="text-primary animate-spin"></lucide-icon>
-        <span class="text-gray-700 font-medium">Salvando...</span>
-      </div>
-    </div>
-  }
 </div>
