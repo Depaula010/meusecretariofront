@@ -1,87 +1,101 @@
 <div class="max-w-7xl mx-auto w-full">
+
   <!-- Header -->
-  <div class="mb-6 md:mb-8">
-    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 break-words">
-      Olá, {{ userName() }}! 👋
-    </h1>
-    <p class="text-sm md:text-base text-gray-600 mt-2 break-words">
-      Bem-vindo de volta! Aqui está um resumo das suas finanças.
-    </p>
+  <div class="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Olá, {{ userName() }}! 👋</h1>
+      <p class="text-sm md:text-base text-gray-500 mt-1">Bem-vindo de volta! Aqui está um resumo das suas finanças.</p>
+    </div>
   </div>
 
   <!-- Error State -->
   @if (error()) {
-    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-      <p class="text-sm text-red-700">{{ error() }}</p>
-      <button
-        (click)="loadDashboardData()"
-        class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
-      >
-        Tentar novamente
-      </button>
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+      <lucide-icon [img]="AlertCircleIcon" [size]="18" class="text-red-500 flex-shrink-0 mt-0.5"></lucide-icon>
+      <div>
+        <p class="text-sm text-red-700 font-medium">{{ error() }}</p>
+        <button (click)="loadDashboardData()" class="mt-1 text-xs text-red-600 hover:text-red-800 font-medium underline">
+          Tentar novamente
+        </button>
+      </div>
     </div>
   }
 
   <!-- Loading State -->
   @if (loading()) {
-    <div class="flex items-center justify-center py-20">
+    <div class="flex items-center justify-center py-24">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   } @else {
+
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       @for (kpi of kpis(); track kpi.title) {
-        <div class="card-base hover:shadow-md transition-shadow overflow-hidden">
+        <div class="card-base hover:shadow-md transition-shadow">
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 min-w-0">
-              <p class="text-xs md:text-sm text-gray-600 font-medium mb-1 break-words">{{ kpi.title }}</p>
-              <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 break-words">{{ kpi.value }}</h3>
-              <div class="flex items-center space-x-1">
-                <lucide-icon
-                  [img]="kpi.trend === 'up' ? TrendingUpIcon : TrendingDownIcon"
-                  [size]="16"
-                  [class]="kpi.color"
-                ></lucide-icon>
-                <span [class]="kpi.color + ' text-sm font-medium'">
-                  {{ kpi.change }}
-                </span>
-                <span class="text-xs text-gray-500">vs mês anterior</span>
-              </div>
+              <p class="text-xs text-gray-500 font-medium mb-1">{{ kpi.title }}</p>
+              <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">{{ kpi.value }}</h3>
+              <p class="text-xs text-gray-400">{{ kpi.subtitle }}</p>
             </div>
-            <div [class]="kpi.color + ' bg-opacity-10 p-3 rounded-xl'">
-              <lucide-icon [img]="kpi.icon" [size]="24" [class]="kpi.color"></lucide-icon>
+            <div [class]="kpi.bgColor + ' p-3 rounded-xl flex-shrink-0'">
+              <lucide-icon [img]="kpi.icon" [size]="22" [class]="kpi.color"></lucide-icon>
             </div>
+          </div>
+          <div class="mt-3 flex items-center gap-1">
+            <lucide-icon
+              [img]="kpi.trend === 'up' ? TrendingUpIcon : TrendingDownIcon"
+              [size]="14"
+              [class]="kpi.color"
+            ></lucide-icon>
+            <span [class]="kpi.color + ' text-xs font-medium'">
+              {{ kpi.trend === 'up' ? 'Positivo' : 'Negativo' }} este mês
+            </span>
           </div>
         </div>
       }
     </div>
 
-    <!-- Charts and Alerts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-      <!-- Chart - 2/3 width -->
-      <div class="lg:col-span-2 card-base overflow-hidden">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <!-- Linha 2: Gráfico + Alertas -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+      <!-- Gráfico de Gastos Mensais (2/3) -->
+      <div class="lg:col-span-2 card-base">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Evolução do Saldo</h3>
-            <p class="text-sm text-gray-600">Últimos 6 meses</p>
+            <h3 class="text-base font-semibold text-gray-900">Gastos Mensais</h3>
+            <p class="text-xs text-gray-500">{{ chartPeriodLabel() }}</p>
           </div>
-          <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-            <option>Últimos 6 meses</option>
-            <option>Último ano</option>
-            <option>Este ano</option>
-          </select>
+          <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              (click)="changeChartPeriod(3)"
+              [class]="chartPeriod() === 3 ? 'bg-white shadow text-primary font-semibold' : 'text-gray-500'"
+              class="px-3 py-1.5 rounded-md text-xs transition-all"
+            >3m</button>
+            <button
+              (click)="changeChartPeriod(6)"
+              [class]="chartPeriod() === 6 ? 'bg-white shadow text-primary font-semibold' : 'text-gray-500'"
+              class="px-3 py-1.5 rounded-md text-xs transition-all"
+            >6m</button>
+            <button
+              (click)="changeChartPeriod(12)"
+              [class]="chartPeriod() === 12 ? 'bg-white shadow text-primary font-semibold' : 'text-gray-500'"
+              class="px-3 py-1.5 rounded-md text-xs transition-all"
+            >12m</button>
+          </div>
         </div>
         <div class="relative h-64">
           <canvas #balanceChart></canvas>
         </div>
       </div>
 
-      <!-- Alerts - 1/3 width -->
-      <div class="card-base overflow-hidden">
+      <!-- Alertas: Contas a Vencer (1/3) -->
+      <div class="card-base">
         <div class="flex items-center justify-between gap-2 mb-4">
-          <h3 class="text-base md:text-lg font-semibold text-gray-900 break-words">Alertas de Hoje</h3>
+          <h3 class="text-base font-semibold text-gray-900">Contas a Vencer</h3>
           @if (totalAlerts() > 0) {
-            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold"
+                  [class]="urgentAlerts().length > 0 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'">
               {{ totalAlerts() }}
             </span>
           }
@@ -89,61 +103,128 @@
 
         @if (alerts().length === 0) {
           <div class="text-center py-8">
-            <lucide-icon [img]="CalendarIcon" [size]="48" class="text-gray-300 mx-auto mb-3"></lucide-icon>
-            <p class="text-sm text-gray-500">Nenhum alerta pendente</p>
+            <lucide-icon [img]="CalendarIcon" [size]="40" class="text-gray-300 mx-auto mb-2"></lucide-icon>
+            <p class="text-sm text-gray-500">Nenhuma conta nos próximos 7 dias</p>
           </div>
         } @else {
-          <div class="space-y-3 max-h-96 overflow-y-auto overflow-x-hidden">
+          <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
             @for (alert of alerts(); track alert.id) {
-              <div
-                [class]="'border rounded-lg p-3 md:p-4 transition-all hover:shadow-sm ' + getAlertBadgeClass(alert.type)"
-              >
-                <div class="flex items-start gap-2 md:gap-3">
+              <div [class]="'border rounded-lg p-3 ' + getAlertBadgeClass(alert.tipo)">
+                <div class="flex items-start gap-2">
                   <lucide-icon
                     [img]="AlertCircleIcon"
-                    [size]="18"
-                    class="flex-shrink-0 mt-0.5"
+                    [size]="16"
+                    [class]="'flex-shrink-0 mt-0.5 ' + getAlertIconClass(alert.tipo)"
                   ></lucide-icon>
                   <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-xs md:text-sm break-words">{{ alert.title }}</p>
-                    <p class="text-xs mt-1 opacity-90 break-words">{{ alert.description }}</p>
-                    <div class="flex items-center space-x-2 mt-2">
-                      <lucide-icon [img]="CalendarIcon" [size]="12"></lucide-icon>
-                      <span class="text-xs font-medium">{{ formatRelativeDate(alert.date) }}</span>
-                    </div>
+                    <p class="text-xs font-semibold truncate">{{ alert.descricao }}</p>
+                    @if (alert.valor_previsto) {
+                      <p class="text-xs opacity-80">{{ formatCurrency(alert.valor_previsto) }}</p>
+                    }
+                    <p class="text-xs font-medium mt-1">{{ formatRelativeDays(alert.dias_restantes) }}</p>
                   </div>
+                </div>
+              </div>
+            }
+          </div>
+          <a routerLink="/finances/bills"
+             class="mt-3 flex items-center justify-center gap-1 text-xs text-primary hover:underline font-medium">
+            Ver todas as contas mensais
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Linha 3: Transações Recentes + Ações Rápidas -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+      <!-- Transações Recentes (2/3) -->
+      <div class="lg:col-span-2 card-base">
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <h3 class="text-base font-semibold text-gray-900">Transações Recentes</h3>
+          <a routerLink="/finances/transactions"
+             class="text-xs text-primary hover:underline font-medium">Ver extrato completo</a>
+        </div>
+
+        @if (recentTransactions().length === 0) {
+          <div class="text-center py-8">
+            <lucide-icon [img]="BarChartIcon" [size]="40" class="text-gray-300 mx-auto mb-2"></lucide-icon>
+            <p class="text-sm text-gray-500">Nenhuma transação recente</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (tx of recentTransactions(); track tx.id) {
+              <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <div [class]="'p-2 rounded-lg flex-shrink-0 ' + getTransactionBg(tx.tipo)">
+                  <lucide-icon
+                    [img]="getTransactionIcon(tx.tipo)"
+                    [size]="16"
+                    [class]="getTransactionColor(tx.tipo)"
+                  ></lucide-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ tx.descricao }}</p>
+                  <p class="text-xs text-gray-400">{{ tx.categoria }}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p [class]="'text-sm font-semibold ' + getTransactionColor(tx.tipo)">
+                    {{ tx.tipo === 'Renda' ? '+' : '-' }}{{ formatCurrency(Math.abs(tx.valor)) }}
+                  </p>
+                  <p class="text-xs text-gray-400">{{ formatDate(tx.data) }}</p>
                 </div>
               </div>
             }
           </div>
         }
       </div>
-    </div>
 
-    <!-- Quick Actions (Optional) -->
-    <div class="mt-6 md:mt-8 card-base overflow-hidden">
-      <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-4 break-words">Ações Rápidas</h3>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <button class="flex flex-col items-center justify-center p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-primary/5 transition-all">
-          <lucide-icon [img]="DollarSignIcon" [size]="20" class="text-primary mb-2"></lucide-icon>
-          <span class="text-xs md:text-sm font-medium text-gray-700 text-center break-words">Nova Receita</span>
-        </button>
+      <!-- Ações Rápidas (1/3) -->
+      <div class="card-base">
+        <h3 class="text-base font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            (click)="navigateTo('/finances/transactions')"
+            class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all group"
+          >
+            <div class="bg-emerald-100 group-hover:bg-emerald-200 p-2 rounded-lg mb-2 transition-colors">
+              <lucide-icon [img]="ArrowUpIcon" [size]="18" class="text-emerald-600"></lucide-icon>
+            </div>
+            <span class="text-xs font-medium text-gray-700 text-center">Nova Receita</span>
+          </button>
 
-        <button class="flex flex-col items-center justify-center p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-all">
-          <lucide-icon [img]="TrendingDownIcon" [size]="20" class="text-red-500 mb-2"></lucide-icon>
-          <span class="text-xs md:text-sm font-medium text-gray-700 text-center break-words">Nova Despesa</span>
-        </button>
+          <button
+            (click)="navigateTo('/finances/transactions')"
+            class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-red-200 hover:border-red-400 hover:bg-red-50 transition-all group"
+          >
+            <div class="bg-red-100 group-hover:bg-red-200 p-2 rounded-lg mb-2 transition-colors">
+              <lucide-icon [img]="ArrowDownIcon" [size]="18" class="text-red-500"></lucide-icon>
+            </div>
+            <span class="text-xs font-medium text-gray-700 text-center">Nova Despesa</span>
+          </button>
 
-        <button class="flex flex-col items-center justify-center p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
-          <lucide-icon [img]="CalendarIcon" [size]="20" class="text-blue-500 mb-2"></lucide-icon>
-          <span class="text-xs md:text-sm font-medium text-gray-700 text-center break-words">Agendar Conta</span>
-        </button>
+          <button
+            (click)="navigateTo('/finances/bills')"
+            class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all group"
+          >
+            <div class="bg-blue-100 group-hover:bg-blue-200 p-2 rounded-lg mb-2 transition-colors">
+              <lucide-icon [img]="CalendarIcon" [size]="18" class="text-blue-600"></lucide-icon>
+            </div>
+            <span class="text-xs font-medium text-gray-700 text-center">Contas Mensais</span>
+          </button>
 
-        <button class="flex flex-col items-center justify-center p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
-          <lucide-icon [img]="AlertCircleIcon" [size]="20" class="text-purple-500 mb-2"></lucide-icon>
-          <span class="text-xs md:text-sm font-medium text-gray-700 text-center break-words">Ver Relatório</span>
-        </button>
+          <button
+            (click)="navigateTo('/finances/accounts')"
+            class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all group"
+          >
+            <div class="bg-purple-100 group-hover:bg-purple-200 p-2 rounded-lg mb-2 transition-colors">
+              <lucide-icon [img]="CreditCardIcon" [size]="18" class="text-purple-600"></lucide-icon>
+            </div>
+            <span class="text-xs font-medium text-gray-700 text-center">Minhas Contas</span>
+          </button>
+        </div>
       </div>
+
     </div>
+
   }
 </div>

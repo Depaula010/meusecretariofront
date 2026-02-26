@@ -1,87 +1,88 @@
 /**
  * Modelos de Dados do Dashboard
  *
- * Tipos TypeScript para os dados consumidos da API de Dashboard
+ * Tipos TypeScript alinhados com os campos reais retornados pela API backend.
  */
 
 /**
  * Resumo/Summary do Dashboard (KPIs)
+ * Endpoint: GET /api/dashboard/summary
+ * Backend retorna: saldo_total, receitas_mes, despesas_mes, saldo_mes, mes_referencia
  */
 export interface DashboardSummary {
-  saldo_atual: number;
-  total_receitas: number;
-  total_despesas: number;
-  cartao_de_credito: number;
-  periodo: string;
+  saldo_total: number;
+  receitas_mes: number;
+  despesas_mes: number;
+  saldo_mes: number;
+  mes_referencia: string;
 }
 
 /**
- * Dados de Gráficos
+ * Dados de gráficos
+ * Endpoint: GET /api/dashboard/charts?meses=3
+ * Backend retorna: gastos_mensais, gastos_categoria, gastos_dia_semana
  */
 export interface DashboardCharts {
-  evolucao_saldo: {
-    labels: string[];
-    valores: number[];
-  };
-  receitas_despesas: {
-    labels: string[];
-    receitas: number[];
-    despesas: number[];
-  };
-  distribuicao_categorias: {
-    categorias: string[];
-    valores: number[];
-  };
+  gastos_mensais: { mes: string; total: number }[];
+  gastos_categoria: { macro_categoria: string; subcategoria: string; total: number; quantidade: number }[];
+  gastos_dia_semana: { dia: string; total: number; quantidade: number }[];
 }
 
 /**
  * Transação Recente
+ * Endpoint: GET /api/dashboard/recent
+ * Backend retorna tipo como "Renda"/"Despesa" (capitalizado) e campo "conta"
  */
 export interface RecentTransaction {
   id: number;
   descricao: string;
   valor: number;
-  tipo: 'receita' | 'despesa';
+  tipo: 'Renda' | 'Despesa' | 'Transferência' | 'Pagamento Fatura';
   categoria: string;
   data: string;
-  conta_bancaria?: string;
+  conta?: string;
 }
 
 /**
- * Alerta Financeiro
+ * Alerta de conta a vencer
+ * Endpoint: GET /api/dashboard/alerts
  */
-export interface FinancialAlert {
+export interface UpcomingAlert {
   id: string;
-  title: string;
-  description: string;
-  type: 'warning' | 'info' | 'danger';
-  date: Date;
-  value?: number;
+  descricao: string;
+  subcategoria: string | null;
+  valor_previsto: number | null;
+  dia_execucao: number;
+  dias_restantes: number;
+  data_vencimento: string;
+  tipo: 'danger' | 'warning' | 'info';
+  tipo_agendamento: 'FIXO' | 'PARCELADO' | 'LEMBRETE_VARIAVEL';
 }
 
-/**
- * Response da API - Summary
- */
+// ==========================================
+// Response Wrappers
+// ==========================================
+
 export interface DashboardSummaryResponse {
   status: 'success' | 'error';
   data?: DashboardSummary;
   message?: string;
 }
 
-/**
- * Response da API - Charts
- */
 export interface DashboardChartsResponse {
   status: 'success' | 'error';
   data?: DashboardCharts;
   message?: string;
 }
 
-/**
- * Response da API - Recent Transactions
- */
 export interface RecentTransactionsResponse {
   status: 'success' | 'error';
   data?: RecentTransaction[];
+  message?: string;
+}
+
+export interface DashboardAlertsResponse {
+  status: 'success' | 'error';
+  data?: UpcomingAlert[];
   message?: string;
 }

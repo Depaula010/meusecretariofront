@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto w-full">
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6">
 
   <!-- ── Header ── -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -27,7 +27,7 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
     <!-- 1. Gastos Mensais -->
-    <div class="card-base border-l-4 border-red-500 relative overflow-hidden group">
+    <div class="card-base p-4 md:p-6 border-l-4 border-red-500 relative overflow-hidden group">
       <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
         <lucide-icon [img]="TrendingDownIcon" [size]="48" class="text-red-600"></lucide-icon>
       </div>
@@ -39,7 +39,7 @@
     </div>
 
     <!-- 2. Gastos Anuais -->
-    <div class="card-base border-l-4 border-amber-500 relative overflow-hidden group">
+    <div class="card-base p-4 md:p-6 border-l-4 border-amber-500 relative overflow-hidden group">
       <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
         <lucide-icon [img]="CalendarIcon" [size]="48" class="text-amber-600"></lucide-icon>
       </div>
@@ -52,7 +52,7 @@
 
     <!-- 3. Reserva de Emergência (Clicável) -->
     <div (click)="showReserveDetails.set(true)"
-      class="card-base border-l-4 border-blue-500 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all active:scale-[0.98]">
+      class="card-base p-4 md:p-6 border-l-4 border-blue-500 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all active:scale-[0.98]">
       <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
         <lucide-icon [img]="ShieldIcon" [size]="48" class="text-blue-600"></lucide-icon>
       </div>
@@ -75,7 +75,7 @@
     </div>
 
     <!-- 4. Receitas Mensais -->
-    <div class="card-base border-l-4 border-emerald-500 relative overflow-hidden group">
+    <div class="card-base p-4 md:p-6 border-l-4 border-emerald-500 relative overflow-hidden group">
       <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
         <lucide-icon [img]="TrendingUpIcon" [size]="48" class="text-emerald-600"></lucide-icon>
       </div>
@@ -83,7 +83,7 @@
       <p class="text-xl md:text-2xl font-bold text-gray-900">
         {{ formatCurrency(summary()?.total_receitas_mensais) }}
       </p>
-      <div class="flex items-center gap-1 mt-1">
+      <div class="flex flex-wrap items-center gap-1 mt-1">
         <span class="text-xs text-gray-400">Saldo prev:</span>
         <span
           [class.text-emerald-600]="(summary()?.total_receitas_mensais || 0) - (summary()?.total_despesas_mensais || 0) >= 0"
@@ -381,7 +381,8 @@
 </div>
 
 <!-- ── Bill Modal ── -->
-<app-bill-modal #billModal (saved)="onBillSaved($event)" (closed)="selectedBill.set(null)"></app-bill-modal>
+<app-bill-modal #billModal [accountsList]="accounts()" (saved)="onBillSaved($event)"
+  (closed)="selectedBill.set(null)"></app-bill-modal>
 
 <!-- ── Delete Confirmation Dialog ── -->
 @if (showDeleteDialog()) {

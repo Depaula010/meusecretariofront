@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LucideAngularModule, X, Loader2, DollarSign, TrendingUp, Calendar, Bell, Tag, CreditCard, Zap, BarChart3, Info } from 'lucide-angular';
@@ -172,6 +172,35 @@ import { finalize } from 'rxjs/operators';
                 <!-- ── IDENTIFICAÇÃO ── -->
                 <div class="section-divider"><span>Identificação</span></div>
 
+                <!-- Tipo de Transação (Receita/Despesa) -->
+                <div class="mb-5">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Fluxo da Conta</label>
+                  <div class="flex p-1 bg-gray-100 rounded-xl w-fit">
+                    <button
+                      type="button"
+                      (click)="setTipoTransacao('Despesa')"
+                      class="px-6 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                      [class.bg-white]="form.get('tipo_transacao')?.value === 'Despesa'"
+                      [class.shadow-sm]="form.get('tipo_transacao')?.value === 'Despesa'"
+                      [class.text-red-600]="form.get('tipo_transacao')?.value === 'Despesa'"
+                      [class.text-gray-500]="form.get('tipo_transacao')?.value !== 'Despesa'"
+                    >
+                      Despesa
+                    </button>
+                    <button
+                      type="button"
+                      (click)="setTipoTransacao('Receita')"
+                      class="px-6 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                      [class.bg-white]="form.get('tipo_transacao')?.value === 'Receita'"
+                      [class.shadow-sm]="form.get('tipo_transacao')?.value === 'Receita'"
+                      [class.text-emerald-600]="form.get('tipo_transacao')?.value === 'Receita'"
+                      [class.text-gray-500]="form.get('tipo_transacao')?.value !== 'Receita'"
+                    >
+                      Receita
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Descrição -->
                 <div class="mb-4">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
@@ -232,9 +261,7 @@ import { finalize } from 'rxjs/operators';
                 <!-- Conta para Débito -->
                 <div class="mb-4">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Conta para Débito *</label>
-                  @if (loadingAccounts()) {
-                    <div class="input-base bg-gray-50 text-gray-400 text-sm">Carregando contas...</div>
-                  } @else if (accounts().length === 0) {
+                  @if (accounts().length === 0) {
                     <div class="input-base bg-yellow-50 text-yellow-700 text-sm">Nenhuma conta cadastrada</div>
                   } @else {
                     <select
@@ -263,11 +290,12 @@ import { finalize } from 'rxjs/operators';
                     <div class="relative">
                       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
                       <input
-                        type="number"
-                        formControlName="valor_previsto"
+                        type="text"
+                        inputmode="numeric"
+                        [value]="formatBRL(form.get('valor_previsto')?.value)"
+                        (input)="onCurrencyInput($event)"
+                        (blur)="onCurrencyBlur()"
                         placeholder="0,00"
-                        step="0.01"
-                        min="0.01"
                         class="input-base pl-12"
                         [class.border-red-300]="isFieldInvalid('valor_previsto')"
                       />
@@ -434,7 +462,7 @@ import { finalize } from 'rxjs/operators';
     }
   `
 })
-export class BillModalComponent implements OnInit {
+export class BillModalComponent {
   @Output() saved = new EventEmitter<ScheduledBill>();
   @Output() closed = new EventEmitter<void>();
 
@@ -457,11 +485,15 @@ export class BillModalComponent implements OnInit {
   error = signal<string | null>(null);
   editMode = signal(false);
 
-  // Dados do backend
+  // Contas recebidas do componente pai (evita chamada duplicada ao backend)
+  @Input() set accountsList(value: BankAccount[]) {
+    this.accounts.set(value);
+  }
+
+  // Dados internos
   accounts = signal<BankAccount[]>([]);
   categories = signal<Category[]>([]);
   subcategories = signal<SubCategory[]>([]);
-  loadingAccounts = signal(false);
   loadingCategories = signal(false);
 
   // State
@@ -482,18 +514,16 @@ export class BillModalComponent implements OnInit {
       dia_execucao: [null, [Validators.required, Validators.min(1), Validators.max(31)]],
       mes_execucao: [null],
       data_inicio: [this.getTodayDate(), Validators.required],
+      tipo_transacao: ['Despesa', Validators.required],
       macro_categoria: ['', Validators.required],
-      subcategoria_id: [null, Validators.required],
+      subcategoria_id: [{ value: null, disabled: true }, Validators.required],
       conta_id: [null, Validators.required],
       notificar_antes_dias: [3],
       incluirNaReserva: [false],
     });
   }
 
-  ngOnInit(): void {
-    this.loadAccounts();
-    this.loadCategories();
-  }
+
 
   /**
    * Abre o modal para criar nova conta ou editar existente
@@ -506,6 +536,8 @@ export class BillModalComponent implements OnInit {
     if (bill) {
       this.editMode.set(true);
       this.billId = bill.id;
+      // Habilita subcategoria antes do patchValue (modo edição já tem categoria)
+      this.form.get('subcategoria_id')?.enable();
       this.form.patchValue({
         tipo_agendamento: bill.tipo_agendamento,
         descricao: bill.descricao,
@@ -514,16 +546,20 @@ export class BillModalComponent implements OnInit {
         dia_execucao: bill.dia_execucao,
         mes_execucao: bill.mes_execucao ?? null,
         data_inicio: bill.data_inicio,
+        tipo_transacao: bill.tipo_transacao,
         subcategoria_id: bill.subcategoria_id,
         conta_id: bill.conta_id,
         notificar_antes_dias: bill.notificar_antes_dias,
         incluirNaReserva: bill.incluir_na_reserva ?? false,
       });
       // Carregar subcategorias da categoria da conta em edição
-      this.loadCategories(bill.subcategoria_id);
+      this.loadCategories(bill.tipo_transacao, bill.subcategoria_id);
     } else {
       this.editMode.set(false);
       this.billId = null;
+      this.form.get('subcategoria_id')?.disable();
+      // Ao criar novo, carregar despesas por padrão (ou o que estiver no form)
+      this.loadCategories(this.form.get('tipo_transacao')?.value);
     }
   }
 
@@ -539,7 +575,7 @@ export class BillModalComponent implements OnInit {
   }
 
   /**
-   * Altera tipo de agendamento e ajusta validações de valor
+   * Altera o tipo de agendamento (Fixo ou Variável)
    */
   setTipo(tipo: 'FIXO' | 'LEMBRETE_VARIAVEL'): void {
     this.form.patchValue({ tipo_agendamento: tipo });
@@ -552,6 +588,22 @@ export class BillModalComponent implements OnInit {
       this.form.get('valor_previsto')?.setValidators([Validators.required, Validators.min(0.01)]);
     }
     this.form.get('valor_previsto')?.updateValueAndValidity();
+  }
+
+  /**
+   * Altera o tipo de transação (Receita ou Despesa) e recarrega categorias
+   */
+  setTipoTransacao(tipo: 'Receita' | 'Despesa'): void {
+    if (this.form.get('tipo_transacao')?.value === tipo) return;
+
+    this.form.patchValue({
+      tipo_transacao: tipo,
+      macro_categoria: '',
+      subcategoria_id: null
+    });
+    this.subcategories.set([]);
+    this.form.get('subcategoria_id')?.disable();
+    this.loadCategories(tipo);
   }
 
   /**
@@ -642,7 +694,7 @@ export class BillModalComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const formValue = this.form.value;
+    const formValue = this.form.getRawValue();
     const billRequest: ScheduledBillRequest = {
       descricao: formValue.descricao,
       tipo_agendamento: formValue.tipo_agendamento,
@@ -679,25 +731,14 @@ export class BillModalComponent implements OnInit {
     });
   }
 
-  /**
-   * Carrega as contas bancárias do usuário
-   */
-  private loadAccounts(): void {
-    this.loadingAccounts.set(true);
-    this.financesService.getAccounts().pipe(
-      finalize(() => this.loadingAccounts.set(false))
-    ).subscribe({
-      next: (accounts) => this.accounts.set(accounts),
-      error: () => this.accounts.set([])
-    });
-  }
+
 
   /**
-   * Carrega categorias de despesa e (opcionalmente) pré-seleciona subcategoria em edição
+   * Carrega categorias (Receita ou Despesa) e (opcionalmente) pré-seleciona subcategoria em edição
    */
-  private loadCategories(subcategoriaIdToSelect?: number): void {
+  private loadCategories(tipo: 'Receita' | 'Despesa' = 'Despesa', subcategoriaIdToSelect?: number): void {
     this.loadingCategories.set(true);
-    this.financesService.getCategories('Despesa').pipe(
+    this.financesService.getCategories(tipo).pipe(
       finalize(() => this.loadingCategories.set(false))
     ).subscribe({
       next: (categories) => {
@@ -724,11 +765,13 @@ export class BillModalComponent implements OnInit {
   private resetForm(): void {
     this.form.reset({
       tipo_agendamento: 'FIXO',
+      tipo_transacao: 'Despesa',
       periodicidade: 'MENSAL',
       dia_execucao: null,
       notificar_antes_dias: 3,
       data_inicio: this.getTodayDate(),
     });
+    this.form.get('subcategoria_id')?.disable();
     this.editMode.set(false);
     this.billId = null;
     this.subcategories.set([]);
