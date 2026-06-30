@@ -38,6 +38,11 @@ export class AuthService {
   // Computed signal para verificar se usuário está logado
   isLoggedIn = computed(() => this.isAuthenticated());
 
+  // Computed signal para verificar se é admin
+  isAdmin = computed(() =>
+    this.currentUser()?.whatsapp === environment.bot.adminWhatsapp
+  );
+
   constructor(private http: HttpClient, private router: Router) {
     // Verificar se há token salvo ao inicializar o serviço
     this.checkAuthentication();

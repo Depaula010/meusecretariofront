@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 import {
   LucideAngularModule,
   LayoutDashboard,
@@ -10,12 +11,14 @@ import {
   LogOut,
   ChevronLeft,
   Receipt,
+  Smartphone,
 } from 'lucide-angular';
 
 interface NavItem {
   label: string;
   route: string;
   icon: any;
+  adminOnly?: boolean;
 }
 
 /**
@@ -60,20 +63,22 @@ interface NavItem {
       <!-- Navigation Menu -->
       <nav class="flex-1 px-4 py-6 space-y-1">
         @for (item of navItems; track item.route) {
-          <a
-            [routerLink]="item.route"
-            routerLinkActive="bg-primary text-white"
-            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
-            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-gray-100 text-gray-700 group"
-            [class.justify-center]="!isOpen"
-          >
-            <lucide-icon
-              [img]="item.icon"
-              [size]="20"
-              class="group-[.bg-primary]:text-white"
-            ></lucide-icon>
-            <span [class.hidden]="!isOpen" class="font-medium">{{ item.label }}</span>
-          </a>
+          @if (!item.adminOnly || authService.isAdmin()) {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="bg-primary text-white"
+              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+              class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-gray-100 text-gray-700 group"
+              [class.justify-center]="!isOpen"
+            >
+              <lucide-icon
+                [img]="item.icon"
+                [size]="20"
+                class="group-[.bg-primary]:text-white"
+              ></lucide-icon>
+              <span [class.hidden]="!isOpen" class="font-medium">{{ item.label }}</span>
+            </a>
+          }
         }
       </nav>
 
@@ -96,6 +101,8 @@ export class SidebarComponent {
   @Input() isOpen = true;
   @Output() toggle = new EventEmitter<void>();
 
+  constructor(public authService: AuthService) {}
+
   // Ícones do Lucide
   ChevronLeftIcon = ChevronLeft;
   LogOutIcon = LogOut;
@@ -117,6 +124,12 @@ export class SidebarComponent {
       label: 'Contas Mensais',
       route: '/finances/bills',
       icon: Receipt,
+    },
+    {
+      label: 'WhatsApp',
+      route: '/whatsapp',
+      icon: Smartphone,
+      adminOnly: true,
     },
     {
       label: 'Assinatura',

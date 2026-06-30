@@ -79,6 +79,7 @@ export class BillsComponent implements OnInit {
   showDeleteDialog = signal(false);
   deleting = signal(false);
   showReserveDetails = signal(false);
+  showGastosMensaisDetails = signal(false);
 
   // ── Filtros e Ordenação ──
   searchTerm = signal('');
@@ -148,6 +149,12 @@ export class BillsComponent implements OnInit {
   // ── Computed: contas da reserva ──
   contasReserva = computed(() =>
     this.bills().filter(b => b.incluir_na_reserva === true)
+  );
+
+  // ── Computed: despesas mensais (excluindo anuais) ──
+  despesasMensais = computed(() =>
+    this.bills().filter(b => b.tipo_transacao === 'Despesa' && b.periodicidade !== 'ANUAL')
+      .sort((a, b) => (a.dia_execucao ?? 0) - (b.dia_execucao ?? 0))
   );
 
   // ── Computed: contas sem estimativa ──

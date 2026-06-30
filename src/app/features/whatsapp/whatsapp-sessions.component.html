@@ -1,0 +1,177 @@
+<div class="p-6 max-w-4xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">WhatsApp</h1>
+      <p class="text-sm text-gray-500 mt-1">Gerenciamento de sessões do bot</p>
+    </div>
+    <button
+      (click)="loadSessions()"
+      class="btn btn-outline btn-sm gap-2"
+      [disabled]="loading()"
+    >
+      <lucide-icon [img]="RefreshCwIcon" [size]="16" [class.animate-spin]="loading()"></lucide-icon>
+      Atualizar
+    </button>
+  </div>
+
+  <!-- Error banner -->
+  @if (error()) {
+    <div class="alert alert-error mb-4">
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading() && sessions().length === 0) {
+    <div class="space-y-3">
+      @for (i of [1, 2]; track i) {
+        <div class="card bg-base-100 shadow-sm border border-gray-200 animate-pulse">
+          <div class="card-body">
+            <div class="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Sessions list -->
+  @if (!loading() || sessions().length > 0) {
+    @if (sessions().length === 0) {
+      <div class="text-center py-16 text-gray-400">
+        <lucide-icon [img]="SmartphoneIcon" [size]="48" class="mx-auto mb-3 opacity-30"></lucide-icon>
+        <p>Nenhuma sessão encontrada</p>
+      </div>
+    } @else {
+      <div class="space-y-3">
+        @for (session of sessions(); track session.session_id) {
+          <div class="card bg-base-100 shadow-sm border border-gray-200">
+            <div class="card-body py-4 px-5">
+              <div class="flex items-center justify-between gap-4">
+
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-semibold text-gray-900 truncate">{{ session.session_name }}</span>
+                    <span class="badge badge-sm {{ statusBadgeClass(session.status) }}">
+                      {{ statusLabel(session.status) }}
+                    </span>
+                  </div>
+                  <div class="text-xs text-gray-500 space-x-4">
+                    <span>Número: {{ session.phone_number || '—' }}</span>
+                    <span>Última conexão: {{ formatDate(session.last_connected_at) }}</span>
+                    <span>Criado: {{ formatDate(session.created_at) }}</span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 shrink-0">
+                  @if (session.status === 'connected') {
+                    <button
+                      (click)="disconnect(session)"
+                      class="btn btn-ghost btn-sm text-error gap-1"
+                    >
+                      <lucide-icon [img]="WifiOffIcon" [size]="14"></lucide-icon>
+                      Desconectar
+                    </button>
+                  } @else {
+                    <button
+                      (click)="openReconnectModal(session)"
+                      class="btn btn-primary btn-sm gap-1"
+                    >
+                      <lucide-icon [img]="WifiIcon" [size]="14"></lucide-icon>
+                      Reconectar
+                    </button>
+                  }
+                </div>
+
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+</div>
+
+<!-- QR Modal -->
+@if (showModal()) {
+  <div class="modal modal-open">
+    <div class="modal-box max-w-sm">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-lg">Reconectar sessão</h3>
+        <button (click)="closeModal()" class="btn btn-ghost btn-sm btn-circle">
+          <lucide-icon [img]="XIcon" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <p class="text-sm text-gray-500 mb-4">
+        <span class="font-medium text-gray-700">{{ activeSession()?.session_name }}</span>
+      </p>
+
+      <!-- Step: connecting -->
+      @if (connectStep() === 'connecting') {
+        <div class="flex flex-col items-center py-8 gap-3 text-gray-500">
+          <lucide-icon [img]="LoaderIcon" [size]="36" class="animate-spin text-primary"></lucide-icon>
+          <p>Iniciando conexão...</p>
+        </div>
+      }
+
+      <!-- Step: waiting for QR -->
+      @if (connectStep() === 'waiting_qr') {
+        <div class="flex flex-col items-center gap-4">
+          @if (qrDataUrl()) {
+            <img
+              [src]="qrDataUrl()"
+              alt="QR Code WhatsApp"
+              class="w-56 h-56 rounded-lg border border-gray-200"
+            />
+            @if (qrExpiresAt()) {
+              <p class="text-xs text-gray-400">
+                Expira em: {{ formatDate(qrExpiresAt()) }}
+              </p>
+            }
+          } @else {
+            <div class="flex flex-col items-center py-6 gap-3 text-gray-400">
+              <lucide-icon [img]="LoaderIcon" [size]="32" class="animate-spin text-primary"></lucide-icon>
+              <p class="text-sm">Aguardando QR Code...</p>
+            </div>
+          }
+          <div class="text-center text-sm text-gray-500 mt-1">
+            <p class="font-medium mb-1">Como escanear:</p>
+            <p>WhatsApp &rarr; Aparelhos conectados &rarr; Conectar aparelho</p>
+          </div>
+        </div>
+      }
+
+      <!-- Step: connected -->
+      @if (connectStep() === 'connected') {
+        <div class="flex flex-col items-center py-8 gap-3 text-success">
+          <lucide-icon [img]="WifiIcon" [size]="48"></lucide-icon>
+          <p class="font-medium text-lg">Conectado com sucesso!</p>
+        </div>
+      }
+
+      <!-- Step: error -->
+      @if (connectStep() === 'error') {
+        <div class="alert alert-error mt-2">
+          <span>{{ connectError() }}</span>
+        </div>
+      }
+
+      <!-- Footer -->
+      @if (connectStep() !== 'connected') {
+        <div class="modal-action">
+          <button (click)="closeModal()" class="btn btn-ghost btn-sm">Cancelar</button>
+        </div>
+      }
+
+    </div>
+    <div class="modal-backdrop" (click)="closeModal()"></div>
+  </div>
+}

@@ -76,6 +76,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/subscription/subscription.component').then(m => m.SubscriptionComponent),
         title: 'Assinatura - Meu Secretário'
+      },
+      {
+        path: 'whatsapp',
+        loadChildren: () =>
+          import('./features/whatsapp/whatsapp.routes').then(m => m.whatsappRoutes),
+        title: 'WhatsApp - Meu Secretário'
       }
     ]
   },

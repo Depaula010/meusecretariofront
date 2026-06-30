@@ -26,6 +26,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     console.log('[AUTH INTERCEPTOR] Token (primeiros 20 chars):', token.substring(0, 20) + '...');
   }
 
+  // Requisições para o bot WhatsApp usam X-API-Key (não Bearer)
+  if (req.url.includes('/bot-api')) {
+    return next(req);
+  }
+
   // Clonar a requisição e adicionar o header Authorization se houver token
   let authReq = req;
   if (token) {

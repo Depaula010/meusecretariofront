@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dir /s /b \"e:\\\\Projetos\\\\Projetos\\\\meusecretariofront\\\\src\\\\app\")",
+      "Bash(findstr:*)",
+      "Bash(npx ng build:*)",
+      "Bash(docker ps:*)"
     ]
   }
 }

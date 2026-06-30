@@ -10,5 +10,12 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/bot-api": {
+    "target": "http://212.47.65.37:3000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": { "^/bot-api": "" }
   }
 }
