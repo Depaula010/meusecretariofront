@@ -42,6 +42,11 @@ import { finalize } from 'rxjs/operators';
       border-color: #8b5cf6;
       color: #6d28d9;
     }
+    .tipo-btn.active-parcelado {
+      background: #fff7ed;
+      border-color: #f97316;
+      color: #c2410c;
+    }
     .tipo-btn.inactive {
       background: #f9fafb;
       border-color: #e5e7eb;
@@ -126,7 +131,7 @@ import { finalize } from 'rxjs/operators';
                 <!-- ── TIPO ── -->
                 <div class="mb-5">
                   <label class="block text-sm font-semibold text-gray-700 mb-3">Tipo de Conta</label>
-                  <div class="grid grid-cols-2 gap-3">
+                  <div class="grid grid-cols-3 gap-3">
 
                     <!-- Fixo -->
                     <button
@@ -164,6 +169,25 @@ import { finalize } from 'rxjs/operators';
                       </div>
                       <span class="font-semibold">Valor Variável</span>
                       <span class="text-xs opacity-70">Valor muda todo mês</span>
+                    </button>
+
+                    <!-- Parcelado -->
+                    <button
+                      type="button"
+                      (click)="setTipo('PARCELADO')"
+                      class="tipo-btn"
+                      [class.active-parcelado]="form.get('tipo_agendamento')?.value === 'PARCELADO'"
+                      [class.inactive]="form.get('tipo_agendamento')?.value !== 'PARCELADO'"
+                    >
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mb-1"
+                        [style.background]="form.get('tipo_agendamento')?.value === 'PARCELADO' ? '#ffedd5' : '#f3f4f6'">
+                        <lucide-icon [img]="CardIcon" [size]="20"
+                          [class.text-orange-600]="form.get('tipo_agendamento')?.value === 'PARCELADO'"
+                          [class.text-gray-400]="form.get('tipo_agendamento')?.value !== 'PARCELADO'"
+                        ></lucide-icon>
+                      </div>
+                      <span class="font-semibold">Parcelado</span>
+                      <span class="text-xs opacity-70">Dividido em parcelas</span>
                     </button>
 
                   </div>
@@ -303,6 +327,24 @@ import { finalize } from 'rxjs/operators';
                     @if (isFieldInvalid('valor_previsto')) {
                       <p class="mt-1 text-xs text-red-600">Valor é obrigatório e deve ser positivo</p>
                     }
+                  } @else if (form.get('tipo_agendamento')?.value === 'PARCELADO') {
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Parcela *</label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
+                      <input
+                        type="text"
+                        inputmode="numeric"
+                        [value]="formatBRL(form.get('valor_previsto')?.value)"
+                        (input)="onCurrencyInput($event)"
+                        (blur)="onCurrencyBlur()"
+                        placeholder="0,00"
+                        class="input-base pl-12"
+                        [class.border-red-300]="isFieldInvalid('valor_previsto')"
+                      />
+                    </div>
+                    @if (isFieldInvalid('valor_previsto')) {
+                      <p class="mt-1 text-xs text-red-600">Valor da parcela é obrigatório e deve ser positivo</p>
+                    }
                   } @else {
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Valor Estimado
@@ -324,22 +366,43 @@ import { finalize } from 'rxjs/operators';
                   }
                 </div>
 
-                <!-- ── RESERVA DE EMERGÊNCIA ── -->
-                <div class="mb-5 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                  <div class="flex items-start gap-3">
-                    <div class="pt-0.5">
-                      <input type="checkbox" id="incluirNaReserva" formControlName="incluirNaReserva" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
-                    </div>
-                    <div>
-                      <label for="incluirNaReserva" class="block text-sm font-semibold text-gray-900 cursor-pointer">
-                        Considerar na Reserva de Emergência
-                      </label>
-                      <p class="text-xs text-blue-700 mt-1 leading-relaxed">
-                        Se marcado, o valor desta conta será somado ao cálculo da sua reserva ideal.
-                      </p>
+                <!-- Número de Parcelas (só para PARCELADO) -->
+                @if (form.get('tipo_agendamento')?.value === 'PARCELADO') {
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Número de Parcelas *</label>
+                    <input
+                      type="number"
+                      formControlName="total_parcelas"
+                      placeholder="Ex: 12"
+                      min="2"
+                      max="360"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('total_parcelas')"
+                    />
+                    @if (isFieldInvalid('total_parcelas')) {
+                      <p class="mt-1 text-xs text-red-600">Informe um número de parcelas válido (mínimo 2)</p>
+                    }
+                  </div>
+                }
+
+                <!-- ── RESERVA DE EMERGÊNCIA (só faz sentido para Despesa) ── -->
+                @if (form.get('tipo_transacao')?.value === 'Despesa') {
+                  <div class="mb-5 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                    <div class="flex items-start gap-3">
+                      <div class="pt-0.5">
+                        <input type="checkbox" id="incluirNaReserva" formControlName="incluirNaReserva" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                      </div>
+                      <div>
+                        <label for="incluirNaReserva" class="block text-sm font-semibold text-gray-900 cursor-pointer">
+                          Considerar na Reserva de Emergência
+                        </label>
+                        <p class="text-xs text-blue-700 mt-1 leading-relaxed">
+                          Se marcado, o valor desta conta será somado ao cálculo da sua reserva ideal.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                }
 
                 <!-- ── AGENDAMENTO ── -->
                 <div class="section-divider"><span>Agendamento</span></div>
@@ -520,7 +583,9 @@ export class BillModalComponent {
       conta_id: [null, Validators.required],
       notificar_antes_dias: [3],
       incluirNaReserva: [false],
+      total_parcelas: [null],
     });
+    this.setTipo('FIXO');
   }
 
 
@@ -550,14 +615,19 @@ export class BillModalComponent {
         subcategoria_id: bill.subcategoria_id,
         conta_id: bill.conta_id,
         notificar_antes_dias: bill.notificar_antes_dias,
-        incluirNaReserva: bill.incluir_na_reserva ?? false,
+        // Reserva de emergência não se aplica a Receita
+        incluirNaReserva: bill.tipo_transacao === 'Despesa' ? (bill.incluir_na_reserva ?? false) : false,
+        total_parcelas: bill.total_parcelas ?? null,
       });
+      // Reaplica validadores de valor_previsto/total_parcelas de acordo com o tipo carregado
+      this.setTipo(bill.tipo_agendamento);
       // Carregar subcategorias da categoria da conta em edição
       this.loadCategories(bill.tipo_transacao, bill.subcategoria_id);
     } else {
       this.editMode.set(false);
       this.billId = null;
       this.form.get('subcategoria_id')?.disable();
+      this.setTipo('FIXO');
       // Ao criar novo, carregar despesas por padrão (ou o que estiver no form)
       this.loadCategories(this.form.get('tipo_transacao')?.value);
     }
@@ -575,19 +645,28 @@ export class BillModalComponent {
   }
 
   /**
-   * Altera o tipo de agendamento (Fixo ou Variável)
+   * Altera o tipo de agendamento (Fixo, Variável ou Parcelado)
    */
-  setTipo(tipo: 'FIXO' | 'LEMBRETE_VARIAVEL'): void {
+  setTipo(tipo: 'FIXO' | 'LEMBRETE_VARIAVEL' | 'PARCELADO'): void {
     this.form.patchValue({ tipo_agendamento: tipo });
     if (tipo === 'LEMBRETE_VARIAVEL') {
       // Para variável: valor_previsto é OPCIONAL (estimativa)
       this.form.get('valor_previsto')?.clearValidators();
       this.form.get('valor_previsto')?.setValidators([Validators.min(0.01)]);
     } else {
-      // Para fixo: valor_previsto é OBRIGATÓRIO
+      // Para fixo e parcelado: valor_previsto é OBRIGATÓRIO
       this.form.get('valor_previsto')?.setValidators([Validators.required, Validators.min(0.01)]);
     }
     this.form.get('valor_previsto')?.updateValueAndValidity();
+
+    if (tipo === 'PARCELADO') {
+      // Parcelado exige número de parcelas (mínimo 2)
+      this.form.get('total_parcelas')?.setValidators([Validators.required, Validators.min(2)]);
+    } else {
+      this.form.get('total_parcelas')?.clearValidators();
+      this.form.patchValue({ total_parcelas: null });
+    }
+    this.form.get('total_parcelas')?.updateValueAndValidity();
   }
 
   /**
@@ -599,7 +678,9 @@ export class BillModalComponent {
     this.form.patchValue({
       tipo_transacao: tipo,
       macro_categoria: '',
-      subcategoria_id: null
+      subcategoria_id: null,
+      // Reserva de emergência não se aplica a Receita
+      incluirNaReserva: tipo === 'Receita' ? false : this.form.get('incluirNaReserva')?.value
     });
     this.subcategories.set([]);
     this.form.get('subcategoria_id')?.disable();
@@ -704,7 +785,9 @@ export class BillModalComponent {
       subcategoria_id: formValue.subcategoria_id,
       conta_id: formValue.conta_id,
       notificar_antes_dias: formValue.notificar_antes_dias || 3,
-      incluir_na_reserva: formValue.incluirNaReserva,
+      // Reserva de emergência não se aplica a Receita
+      incluir_na_reserva: formValue.tipo_transacao === 'Receita' ? false : formValue.incluirNaReserva,
+      total_parcelas: formValue.tipo_agendamento === 'PARCELADO' ? formValue.total_parcelas : null,
     };
 
     if (formValue.valor_previsto !== null && formValue.valor_previsto !== undefined) {
@@ -772,6 +855,7 @@ export class BillModalComponent {
       data_inicio: this.getTodayDate(),
     });
     this.form.get('subcategoria_id')?.disable();
+    this.setTipo('FIXO');
     this.editMode.set(false);
     this.billId = null;
     this.subcategories.set([]);

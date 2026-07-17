@@ -174,7 +174,7 @@ export interface ScheduledBill {
   id: number;
   descricao: string;
   valor_previsto?: number;
-  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
+  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL' | 'PARCELADO';
   tipo_transacao: 'Receita' | 'Despesa'; // derivado do grupo da categoria
   grupo?: string;                          // ex: "Renda", "Moradia", "Lazer"
   periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
@@ -198,7 +198,7 @@ export interface ScheduledBill {
 export interface ScheduledBillRequest {
   descricao: string;
   valor_previsto?: number;
-  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL';
+  tipo_agendamento: 'FIXO' | 'LEMBRETE_VARIAVEL' | 'PARCELADO';
   periodicidade: 'DIARIA' | 'SEMANAL' | 'QUINZENAL' | 'MENSAL' | 'ANUAL';
   dia_execucao: number;
   mes_execucao?: number | null;
@@ -207,6 +207,7 @@ export interface ScheduledBillRequest {
   conta_id: number;
   data_inicio?: string;
   incluir_na_reserva?: boolean;
+  total_parcelas?: number | null;
 }
 
 /**
