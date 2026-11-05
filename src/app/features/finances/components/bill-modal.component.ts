@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { LucideAngularModule, X, Loader2, DollarSign, TrendingUp, Calendar, Bell, Tag, CreditCard, Zap, BarChart3, Info } from 'lucide-angular';
 import { FinancesService } from '../services/finances.service';
 import { ScheduledBill, ScheduledBillRequest, BankAccount, Category, SubCategory } from '../models/finances.model';
@@ -383,6 +383,24 @@ import { finalize } from 'rxjs/operators';
                       <p class="mt-1 text-xs text-red-600">Informe um número de parcelas válido (mínimo 2)</p>
                     }
                   </div>
+
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Parcelas já pagas</label>
+                    <input
+                      type="number"
+                      formControlName="parcelas_executadas"
+                      placeholder="0"
+                      min="0"
+                      [max]="(form.get('total_parcelas')?.value || 2) - 1"
+                      class="input-base"
+                      [class.border-red-300]="isFieldInvalid('parcelas_executadas')"
+                    />
+                    @if (isFieldInvalid('parcelas_executadas')) {
+                      <p class="mt-1 text-xs text-red-600">Use um número de 0 até o número de parcelas menos 1</p>
+                    } @else {
+                      <p class="mt-1 text-xs text-gray-400">Se a compra já começou, diga quantas parcelas você já pagou</p>
+                    }
+                  </div>
                 }
 
                 <!-- ── RESERVA DE EMERGÊNCIA (só faz sentido para Despesa) ── -->
@@ -584,9 +602,27 @@ export class BillModalComponent {
       notificar_antes_dias: [3],
       incluirNaReserva: [false],
       total_parcelas: [null],
+      parcelas_executadas: [0],
     });
+    // Mudou o número de parcelas: confere de novo as já pagas
+    this.form.get('total_parcelas')?.valueChanges.subscribe(() =>
+      this.form.get('parcelas_executadas')?.updateValueAndValidity({ emitEvent: false }));
     this.setTipo('FIXO');
   }
+
+  /** Parcelas já pagas: inteiro de 0 até total_parcelas - 1 (vazio conta como 0) */
+  private readonly paidInstallmentsValidator = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const total = Number(this.form?.get('total_parcelas')?.value);
+    const paid = Number(value);
+    if (!Number.isInteger(paid) || paid < 0 || (total >= 2 && paid >= total)) {
+      return { paidInstallments: true };
+    }
+    return null;
+  };
 
 
 
@@ -618,6 +654,7 @@ export class BillModalComponent {
         // Reserva de emergência não se aplica a Receita
         incluirNaReserva: bill.tipo_transacao === 'Despesa' ? (bill.incluir_na_reserva ?? false) : false,
         total_parcelas: bill.total_parcelas ?? null,
+        parcelas_executadas: bill.parcelas_executadas ?? 0,
       });
       // Reaplica validadores de valor_previsto/total_parcelas de acordo com o tipo carregado
       this.setTipo(bill.tipo_agendamento);
@@ -662,11 +699,14 @@ export class BillModalComponent {
     if (tipo === 'PARCELADO') {
       // Parcelado exige número de parcelas (mínimo 2)
       this.form.get('total_parcelas')?.setValidators([Validators.required, Validators.min(2)]);
+      this.form.get('parcelas_executadas')?.setValidators([this.paidInstallmentsValidator]);
     } else {
       this.form.get('total_parcelas')?.clearValidators();
-      this.form.patchValue({ total_parcelas: null });
+      this.form.get('parcelas_executadas')?.clearValidators();
+      this.form.patchValue({ total_parcelas: null, parcelas_executadas: 0 });
     }
     this.form.get('total_parcelas')?.updateValueAndValidity();
+    this.form.get('parcelas_executadas')?.updateValueAndValidity();
   }
 
   /**
@@ -789,6 +829,9 @@ export class BillModalComponent {
       incluir_na_reserva: formValue.tipo_transacao === 'Receita' ? false : formValue.incluirNaReserva,
       total_parcelas: formValue.tipo_agendamento === 'PARCELADO' ? formValue.total_parcelas : null,
     };
+    if (formValue.tipo_agendamento === 'PARCELADO') {
+      billRequest.parcelas_executadas = Number(formValue.parcelas_executadas) || 0;
+    }
 
     if (formValue.valor_previsto !== null && formValue.valor_previsto !== undefined) {
       billRequest.valor_previsto = formValue.valor_previsto;
@@ -853,6 +896,7 @@ export class BillModalComponent {
       dia_execucao: null,
       notificar_antes_dias: 3,
       data_inicio: this.getTodayDate(),
+      parcelas_executadas: 0,
     });
     this.form.get('subcategoria_id')?.disable();
     this.setTipo('FIXO');

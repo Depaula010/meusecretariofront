@@ -208,6 +208,8 @@ export interface ScheduledBillRequest {
   data_inicio?: string;
   incluir_na_reserva?: boolean;
   total_parcelas?: number | null;
+  /** Parcelas já pagas (só PARCELADO), de 0 até total_parcelas - 1 */
+  parcelas_executadas?: number | null;
 }
 
 /**
