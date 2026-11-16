@@ -498,16 +498,8 @@ import { finalize } from 'rxjs/operators';
                     }
                   </div>
 
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Notificar (dias antes)</label>
-                    <input
-                      type="number"
-                      formControlName="notificar_antes_dias"
-                      min="0"
-                      max="30"
-                      class="input-base"
-                    />
-                  </div>
+                  <!-- Campo "Notificar (dias antes)" escondido (auditoria 2026-11-16): nenhum job o lê desde os desvios 268 e 272.
+                       O formulário segue enviando o valor para não mudar o contrato da API. -->
                 </div>
 
               </form>

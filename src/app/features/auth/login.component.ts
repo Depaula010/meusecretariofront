@@ -98,13 +98,7 @@ import { AuthService } from '../../core/services/auth.service';
           </button>
         </form>
 
-        <!-- Link para Cadastro -->
-        <p class="text-center text-sm text-gray-600 mt-6">
-          Não tem conta?
-          <a routerLink="/auth/register" class="text-primary hover:underline font-medium">
-            Cadastre-se
-          </a>
-        </p>
+        <!-- Cadastro público desligado (REGISTRATION_ENABLED=false no backend; app de um usuário só). -->
       </div>
     </div>
   `

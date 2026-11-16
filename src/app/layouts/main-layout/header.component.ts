@@ -144,7 +144,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     '/finances/transactions': 'Transações',
     '/finances/accounts': 'Contas Bancárias',
     '/settings': 'Configurações',
-    '/subscription': 'Assinatura',
   };
 
   constructor(
