@@ -294,9 +294,11 @@ export class AccountModalComponent implements OnInit, OnChanges {
     this.error.set(null);
 
     if (account) {
+      this.account = account;
       this.editMode.set(true);
       this.loadAccount(account);
     } else {
+      this.account = null;
       this.editMode.set(false);
       this.form.reset({
         nome_conta: '',
