@@ -30,4 +30,10 @@ export const environment = {
     enableConsoleLog: false,
     enableErrorTracking: true,
   },
+
+  // Bot WhatsApp: a chave X-API-Key deve ser injetada pelo proxy reverso do servidor, nunca aqui.
+  bot: {
+    apiUrl: '/bot-api/api/v1',
+    adminWhatsapp: '',
+  },
 };

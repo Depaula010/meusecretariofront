@@ -824,7 +824,7 @@ export class BillModalComponent {
       data_inicio: formValue.data_inicio,
       subcategoria_id: formValue.subcategoria_id,
       conta_id: formValue.conta_id,
-      notificar_antes_dias: formValue.notificar_antes_dias || 3,
+      notificar_antes_dias: formValue.notificar_antes_dias ?? 3,
       // Reserva de emergência não se aplica a Receita
       incluir_na_reserva: formValue.tipo_transacao === 'Receita' ? false : formValue.incluirNaReserva,
       total_parcelas: formValue.tipo_agendamento === 'PARCELADO' ? formValue.total_parcelas : null,

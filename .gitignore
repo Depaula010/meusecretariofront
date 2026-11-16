@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Chave do bot para o proxy de desenvolvimento (nunca versionar)
+.env.local

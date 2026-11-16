@@ -163,7 +163,7 @@ export class FinancesService {
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
-            return response.data;
+            return response.data.map((raw) => this.accountFromApi(raw));
           }
           throw new Error(response.message || 'Erro ao carregar contas');
         }),
@@ -181,11 +181,11 @@ export class FinancesService {
    */
   createAccount(account: BankAccountRequest): Observable<BankAccount> {
     return this.http
-      .post<BankAccountCreateResponse>(`${this.API_URL}/api/accounts`, account)
+      .post<BankAccountCreateResponse>(`${this.API_URL}/api/accounts`, this.accountToApi(account))
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
-            return response.data;
+            return this.accountFromApi(response.data);
           }
           throw new Error(response.message || 'Erro ao criar conta');
         }),
@@ -204,11 +204,11 @@ export class FinancesService {
    */
   updateAccount(id: number, account: Partial<BankAccountRequest>): Observable<BankAccount> {
     return this.http
-      .put<BankAccountCreateResponse>(`${this.API_URL}/api/accounts/${id}`, account)
+      .put<BankAccountCreateResponse>(`${this.API_URL}/api/accounts/${id}`, this.accountToApi(account))
       .pipe(
         map((response) => {
           if (response.status === 'success' && response.data) {
-            return response.data;
+            return this.accountFromApi(response.data);
           }
           throw new Error(response.message || 'Erro ao atualizar conta');
         }),
@@ -367,6 +367,57 @@ export class FinancesService {
         }),
         catchError(this.handleError)
       );
+  }
+
+  // ==========================================
+  // CONTAS: tradução entre o modelo da tela e o contrato de /api/accounts (spec 002)
+  // ==========================================
+
+  private static readonly ACCOUNT_TYPE_TO_API: Record<string, string> = {
+    corrente: 'Conta Corrente',
+    poupanca: 'Conta Poupança',
+    cartao_credito: 'Cartão de Crédito',
+    investimento: 'Investimento',
+    dinheiro: 'Dinheiro',
+    outro: 'Outro',
+  };
+
+  private static readonly ACCOUNT_TYPE_FROM_API: Record<string, BankAccount['tipo']> = {
+    'Conta Corrente': 'corrente',
+    'Conta Poupança': 'poupanca',
+    'Cartão de Crédito': 'cartao_credito',
+    'Investimento': 'investimento',
+    'Dinheiro': 'dinheiro',
+    'Outro': 'outro',
+  };
+
+  /** Resposta da API (tipo_conta com nome por extenso, cor_hex, limite_credito) para o modelo da tela. */
+  private accountFromApi(raw: any): BankAccount {
+    const tipoApi: string = raw.tipo_conta ?? raw.tipo ?? '';
+    return {
+      id: raw.id,
+      nome: raw.nome_conta ?? raw.nome,
+      tipo: FinancesService.ACCOUNT_TYPE_FROM_API[tipoApi] ?? 'outro',
+      saldo: Number(raw.saldo ?? raw.saldo_inicial ?? 0),
+      banco: raw.banco ?? tipoApi,
+      cor: raw.cor_hex ?? raw.cor ?? undefined,
+      limite: raw.limite_credito ?? raw.limite ?? undefined,
+      dia_vencimento: raw.dia_vencimento ?? undefined,
+      dia_fechamento: raw.dia_fechamento ?? undefined,
+    };
+  }
+
+  /** Modelo da tela para o corpo que a API espera (nome_conta, tipo_conta, saldo_inicial, cor_hex, limite_credito). */
+  private accountToApi(account: Partial<BankAccountRequest>): Record<string, unknown> {
+    const body: Record<string, unknown> = {};
+    if (account.nome !== undefined) body['nome_conta'] = account.nome;
+    if (account.tipo !== undefined) body['tipo_conta'] = FinancesService.ACCOUNT_TYPE_TO_API[account.tipo] ?? account.tipo;
+    if (account.saldo !== undefined) body['saldo_inicial'] = account.saldo;
+    if (account.cor !== undefined) body['cor_hex'] = account.cor;
+    if (account.limite !== undefined && account.limite !== null) body['limite_credito'] = account.limite;
+    if (account.dia_fechamento !== undefined && account.dia_fechamento !== null) body['dia_fechamento'] = account.dia_fechamento;
+    if (account.dia_vencimento !== undefined && account.dia_vencimento !== null) body['dia_vencimento'] = account.dia_vencimento;
+    return body;
   }
 
   // ==========================================

@@ -398,7 +398,7 @@ export class AccountModalComponent implements OnInit, OnChanges {
         },
         error: (err) => {
           console.error('Erro ao salvar conta:', err);
-          this.error.set(err.error?.message || 'Erro ao salvar conta. Tente novamente.');
+          this.error.set(err?.message || 'Erro ao salvar conta. Tente novamente.');
         },
       });
   }

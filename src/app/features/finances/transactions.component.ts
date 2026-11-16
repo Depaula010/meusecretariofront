@@ -90,7 +90,7 @@ export class TransactionsComponent implements OnInit {
     // Procura por 'Receita' com R maiúsculo
     return list
       .filter(t => t.tipo === 'Receita')
-      .reduce((sum, t) => sum + t.valor, 0);
+      .reduce((sum, t) => sum + Math.abs(t.valor), 0);
   });
 
   totalDespesas = computed(() => {
@@ -100,7 +100,7 @@ export class TransactionsComponent implements OnInit {
     // Procura por 'Despesa' com D maiúsculo
     return list
       .filter(t => t.tipo === 'Despesa')
-      .reduce((sum, t) => sum + t.valor, 0);
+      .reduce((sum, t) => sum + Math.abs(t.valor), 0); // a API devolve a despesa negativa
   });
 
   saldoPeriodo = computed(() => {

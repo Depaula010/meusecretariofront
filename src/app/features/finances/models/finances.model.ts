@@ -16,6 +16,8 @@ export interface Transaction {
   data: string;
   conta_bancaria?: string;
   conta_bancaria_id?: number;
+  conta_id?: number;
+  subcategoria_id?: number;
   observacoes?: string;
 }
 
@@ -80,7 +82,7 @@ export interface TransactionCreateResponse {
 export interface BankAccount {
   id: number;
   nome: string;
-  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento';
+  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento' | 'dinheiro' | 'outro';
   saldo: number;
   banco: string;
   cor?: string;
@@ -95,7 +97,7 @@ export interface BankAccount {
  */
 export interface BankAccountRequest {
   nome: string;
-  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento';
+  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento' | 'dinheiro' | 'outro';
   banco: string;
   saldo: number;
   cor?: string;
