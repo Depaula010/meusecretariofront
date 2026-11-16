@@ -399,6 +399,7 @@ export class FinancesService {
       nome: raw.nome_conta ?? raw.nome,
       tipo: FinancesService.ACCOUNT_TYPE_FROM_API[tipoApi] ?? 'outro',
       saldo: Number(raw.saldo ?? raw.saldo_inicial ?? 0),
+      saldo_projetado: raw.saldo_projetado === undefined || raw.saldo_projetado === null ? undefined : Number(raw.saldo_projetado),
       banco: raw.banco ?? tipoApi,
       cor: raw.cor_hex ?? raw.cor ?? undefined,
       limite: raw.limite_credito ?? raw.limite ?? undefined,

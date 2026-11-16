@@ -15,6 +15,8 @@ export interface DashboardSummary {
   despesas_mes: number;
   saldo_mes: number;
   mes_referencia: string;
+  /** Saldo sem o corte de hoje (inclui faturas e contas futuras). Backend desvio 283; ausente em backend antigo. */
+  saldo_projetado?: number;
 }
 
 /**

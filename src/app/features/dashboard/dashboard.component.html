@@ -37,6 +37,9 @@
               <p class="text-xs text-gray-500 font-medium mb-1">{{ kpi.title }}</p>
               <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">{{ kpi.value }}</h3>
               <p class="text-xs text-gray-400">{{ kpi.subtitle }}</p>
+              @if (kpi.secondary) {
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ kpi.secondary }}</p>
+              }
             </div>
             <div [class]="kpi.bgColor + ' p-3 rounded-xl flex-shrink-0'">
               <lucide-icon [img]="kpi.icon" [size]="22" [class]="kpi.color"></lucide-icon>

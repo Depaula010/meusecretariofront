@@ -30,6 +30,8 @@ interface KPICard {
   icon: any;
   color: string;
   bgColor: string;
+  /** Linha secundária menor (ex.: saldo projetado). */
+  secondary?: string;
 }
 
 @Component({
@@ -83,6 +85,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         title:   'Saldo Atual',
         value:   this.formatCurrency(d.saldo_total),
         subtitle: d.mes_referencia,
+        secondary: this.projectedLine(d.saldo_total, d.saldo_projetado),
         trend:   d.saldo_total >= 0 ? 'up' : 'down',
         icon:    DollarSign,
         color:   d.saldo_total >= 0 ? 'text-emerald-600' : 'text-red-600',
@@ -247,6 +250,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ==========================================
   formatCurrency(value: number | undefined | null): string {
     return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  /** "Projetado após faturas: R$ X", só quando o projetado difere do saldo de hoje. */
+  projectedLine(saldo: number, projetado: number | undefined): string | undefined {
+    if (projetado === undefined || projetado === null || Math.abs(projetado - saldo) < 0.005) return undefined;
+    return `Projetado após faturas: ${this.formatCurrency(projetado)}`;
   }
 
   formatRelativeDays(dias: number): string {

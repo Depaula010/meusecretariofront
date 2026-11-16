@@ -35,6 +35,9 @@
         <h2 class="text-3xl font-bold">
           {{ formatCurrency(totalBalance()) }}
         </h2>
+        @if (projectedLine(totalBalance(), totalProjected()); as projected) {
+          <p class="text-xs opacity-80 mt-1">{{ projected }}</p>
+        }
         <p class="text-xs opacity-80 mt-2">
           {{ accounts().length }} conta{{ accounts().length !== 1 ? 's' : '' }}
         </p>
@@ -118,6 +121,9 @@
                   >
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }
@@ -175,6 +181,9 @@
                   <p class="text-2xl font-bold text-green-600">
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }
@@ -314,6 +323,9 @@
                   <p class="text-2xl font-bold text-purple-600">
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }
@@ -371,6 +383,9 @@
                   <p class="text-2xl font-bold text-purple-600">
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }

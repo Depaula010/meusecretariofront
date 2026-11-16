@@ -84,6 +84,8 @@ export interface BankAccount {
   nome: string;
   tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento' | 'dinheiro' | 'outro';
   saldo: number;
+  /** Saldo sem o corte de hoje (backend desvio 283); ausente em backend antigo. */
+  saldo_projetado?: number;
   banco: string;
   cor?: string;
   // Campos específicos para cartão de crédito
