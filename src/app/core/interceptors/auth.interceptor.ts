@@ -19,13 +19,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Obter token do localStorage
   const token = localStorage.getItem(TOKEN_KEY);
 
-  // DEBUG: Verificar token e requisição
-  console.log('[AUTH INTERCEPTOR] URL:', req.url);
-  console.log('[AUTH INTERCEPTOR] Token presente:', !!token);
-  if (token) {
-    console.log('[AUTH INTERCEPTOR] Token (primeiros 20 chars):', token.substring(0, 20) + '...');
-  }
-
   // Requisições para o bot WhatsApp usam X-API-Key (não Bearer)
   if (req.url.includes('/bot-api')) {
     return next(req);
@@ -33,15 +26,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Clonar a requisição e adicionar o header Authorization se houver token
   let authReq = req;
-  if (token) {
+  // O Bearer só vai para a nossa API (URL relativa ou o apiUrl do ambiente), nunca para outro host.
+  const isOwnApi = !/^https?:\/\//i.test(req.url) || req.url.startsWith(environment.apiUrl);
+  if (token && isOwnApi) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log('[AUTH INTERCEPTOR] Header Authorization adicionado');
-  } else {
-    console.warn('[AUTH INTERCEPTOR] ⚠️ NENHUM TOKEN ENCONTRADO! Requisição sem autenticação.');
   }
 
   // Enviar a requisição e tratar erros

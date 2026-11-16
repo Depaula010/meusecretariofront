@@ -16,6 +16,8 @@ export interface Transaction {
   data: string;
   conta_bancaria?: string;
   conta_bancaria_id?: number;
+  conta_id?: number;
+  subcategoria_id?: number;
   observacoes?: string;
 }
 
@@ -80,8 +82,10 @@ export interface TransactionCreateResponse {
 export interface BankAccount {
   id: number;
   nome: string;
-  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento';
+  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento' | 'dinheiro' | 'outro';
   saldo: number;
+  /** Saldo sem o corte de hoje (backend desvio 283); ausente em backend antigo. */
+  saldo_projetado?: number;
   banco: string;
   cor?: string;
   // Campos específicos para cartão de crédito
@@ -95,7 +99,7 @@ export interface BankAccount {
  */
 export interface BankAccountRequest {
   nome: string;
-  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento';
+  tipo: 'corrente' | 'poupanca' | 'cartao_credito' | 'investimento' | 'dinheiro' | 'outro';
   banco: string;
   saldo: number;
   cor?: string;
@@ -208,6 +212,8 @@ export interface ScheduledBillRequest {
   data_inicio?: string;
   incluir_na_reserva?: boolean;
   total_parcelas?: number | null;
+  /** Parcelas já pagas (só PARCELADO), de 0 até total_parcelas - 1 */
+  parcelas_executadas?: number | null;
 }
 
 /**

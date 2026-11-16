@@ -59,6 +59,17 @@ export class AccountsComponent implements OnInit {
     return this.accounts().reduce((sum, acc) => sum + acc.saldo, 0);
   });
 
+  // Computed: Saldo total projetado (sem o corte de hoje); igual ao total quando o backend não manda o campo
+  totalProjected = computed(() => {
+    return this.accounts().reduce((sum, acc) => sum + (acc.saldo_projetado ?? acc.saldo), 0);
+  });
+
+  /** "Projetado após faturas: R$ X", só quando difere do saldo de hoje. */
+  projectedLine(saldo: number, projetado: number | undefined): string | null {
+    if (projetado === undefined || Math.abs(projetado - saldo) < 0.005) return null;
+    return `Projetado após faturas: ${this.formatCurrency(projetado)}`;
+  }
+
   // Computed: Contas agrupadas por tipo
   accountsByType = computed(() => {
     const accounts = this.accounts();
@@ -66,7 +77,8 @@ export class AccountsComponent implements OnInit {
       corrente: accounts.filter(a => a.tipo === 'corrente'),
       poupanca: accounts.filter(a => a.tipo === 'poupanca'),
       cartao_credito: accounts.filter(a => a.tipo === 'cartao_credito'),
-      investimento: accounts.filter(a => a.tipo === 'investimento')
+      investimento: accounts.filter(a => a.tipo === 'investimento'),
+      outras: accounts.filter(a => a.tipo === 'dinheiro' || a.tipo === 'outro')
     };
   });
 
@@ -130,7 +142,9 @@ export class AccountsComponent implements OnInit {
       'corrente': 'Conta Corrente',
       'poupanca': 'Poupança',
       'cartao_credito': 'Cartão de Crédito',
-      'investimento': 'Investimento'
+      'investimento': 'Investimento',
+      'dinheiro': 'Dinheiro',
+      'outro': 'Outro'
     };
     return labels[tipo] || tipo;
   }

@@ -247,15 +247,17 @@ export class TransactionModalComponent implements OnInit {
       this.editMode.set(true);
       this.transactionId = value.id;
       // Preencher formulario com dados existentes
+      // A API devolve a despesa com sinal negativo; o formulário só aceita valor positivo (min 0,01).
       this.form.patchValue({
         descricao: value.descricao,
-        valor: value.valor,
+        valor: Math.abs(value.valor),
         tipo: value.tipo,
         data: value.data,
+        conta_id: value.conta_id ?? value.conta_bancaria_id ?? null,
         observacoes: value.observacoes || ''
       });
-      // Carregar categorias do tipo correto
-      const tipo = value.tipo;
+      // Carregar categorias do tipo correto e, ao chegarem, marcar a categoria e a subcategoria da transação
+      this.pendingSubcategoryId = value.subcategoria_id ?? null;
       this.loadCategories(value.tipo);
     } else {
       this.editMode.set(false);
@@ -287,6 +289,7 @@ export class TransactionModalComponent implements OnInit {
 
   // State
   private transactionId: number | null = null;
+  private pendingSubcategoryId: number | null = null;
 
   // Form
   form: FormGroup;
@@ -437,9 +440,26 @@ export class TransactionModalComponent implements OnInit {
     this.financesService.getCategories(tipo).pipe(
       finalize(() => this.loadingCategories.set(false))
     ).subscribe({
-      next: (categories) => this.categories.set(categories),
+      next: (categories) => {
+        this.categories.set(categories);
+        this.selectPendingSubcategory(categories);
+      },
       error: () => this.categories.set([])
     });
+  }
+
+  /** Na edição, escolhe a categoria (macro) e a subcategoria da transação assim que a lista chega. */
+  private selectPendingSubcategory(categories: Category[]): void {
+    const subId = this.pendingSubcategoryId;
+    if (subId === null) {
+      return;
+    }
+    this.pendingSubcategoryId = null;
+    const macro = categories.find(c => (c.subcategorias || []).some(s => s.id === subId));
+    if (macro) {
+      this.subcategories.set(macro.subcategorias || []);
+      this.form.patchValue({ macro_categoria: macro.macro_id, subcategoria_id: subId });
+    }
   }
 
   /**
@@ -452,6 +472,7 @@ export class TransactionModalComponent implements OnInit {
     });
     this.editMode.set(false);
     this.transactionId = null;
+    this.pendingSubcategoryId = null;
     this.subcategories.set([]);
     this.loadCategories('Despesa');
   }

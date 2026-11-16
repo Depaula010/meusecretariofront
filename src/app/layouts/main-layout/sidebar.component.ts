@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Wallet,
   Settings,
-  CreditCard,
   LogOut,
   ChevronLeft,
   Receipt,
@@ -130,11 +129,6 @@ export class SidebarComponent {
       route: '/whatsapp',
       icon: Smartphone,
       adminOnly: true,
-    },
-    {
-      label: 'Assinatura',
-      route: '/subscription',
-      icon: CreditCard,
     },
     {
       label: 'Configurações',

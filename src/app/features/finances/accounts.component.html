@@ -35,6 +35,9 @@
         <h2 class="text-3xl font-bold">
           {{ formatCurrency(totalBalance()) }}
         </h2>
+        @if (projectedLine(totalBalance(), totalProjected()); as projected) {
+          <p class="text-xs opacity-80 mt-1">{{ projected }}</p>
+        }
         <p class="text-xs opacity-80 mt-2">
           {{ accounts().length }} conta{{ accounts().length !== 1 ? 's' : '' }}
         </p>
@@ -118,6 +121,9 @@
                   >
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }
@@ -175,6 +181,9 @@
                   <p class="text-2xl font-bold text-green-600">
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }
@@ -314,6 +323,69 @@
                   <p class="text-2xl font-bold text-purple-600">
                     {{ formatCurrency(account.saldo) }}
                   </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Dinheiro e outras -->
+      @if (accountsByType().outras.length > 0) {
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Dinheiro e outras</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (account of accountsByType().outras; track account.id) {
+              <div class="card-base hover:shadow-lg transition-all group relative">
+                <!-- Action Buttons -->
+                <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    (click)="openEditModal(account)"
+                    class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-600"></lucide-icon>
+                  </button>
+                  <button
+                    (click)="confirmDelete(account)"
+                    class="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    title="Excluir"
+                  >
+                    <lucide-icon [img]="Trash2Icon" [size]="16" class="text-red-600"></lucide-icon>
+                  </button>
+                </div>
+
+                <div class="flex items-start justify-between mb-4">
+                  <div
+                    class="p-3 rounded-lg"
+                    [style.background-color]="account.cor || '#8B5CF6'"
+                    style="opacity: 0.2"
+                  >
+                    <lucide-icon
+                      [img]="TrendingUpIcon"
+                      [size]="24"
+                      class="text-gray-700"
+                    ></lucide-icon>
+                  </div>
+                  <span class="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {{ getAccountTypeLabel(account.tipo) }}
+                  </span>
+                </div>
+
+                <h4 class="font-bold text-gray-900 mb-1">{{ account.nome }}</h4>
+                <p class="text-sm text-gray-600 mb-3">{{ account.banco }}</p>
+
+                <div class="border-t border-gray-100 pt-3">
+                  <p class="text-xs text-gray-500 mb-1">Saldo</p>
+                  <p class="text-2xl font-bold text-purple-600">
+                    {{ formatCurrency(account.saldo) }}
+                  </p>
+                  @if (projectedLine(account.saldo, account.saldo_projetado); as projected) {
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ projected }}</p>
+                  }
                 </div>
               </div>
             }

@@ -197,7 +197,7 @@ export class SettingsService {
   /** Remove endereço favorito pelo label */
   removeAddress(label: string): Observable<ApiResponse> {
     this._loading.set(true);
-    return this.http.delete<ApiResponse>(`/api/user/addresses/${label}`).pipe(
+    return this.http.delete<ApiResponse>(`/api/user/addresses/${encodeURIComponent(label)}`).pipe(
       tap(res => {
         if (res.status === 'success') {
           this._settings.update(cur => {

@@ -11,8 +11,9 @@ export class WhatsappService {
 
   constructor(private http: HttpClient) {}
 
+  // A X-API-Key do bot NÃO é enviada pelo navegador: o proxy (proxy.conf.js em dev, proxy reverso em produção) a injeta.
   private get headers(): HttpHeaders {
-    return new HttpHeaders({ 'X-API-Key': environment.bot.apiKey });
+    return new HttpHeaders();
   }
 
   getSessions(): Observable<BotSession[]> {

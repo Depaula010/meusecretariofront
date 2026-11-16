@@ -31,4 +31,10 @@ export const environment = {
     enableConsoleLog: true,
     enableErrorTracking: false,
   },
+
+  // Configurações do bot WhatsApp
+  bot: {
+    apiUrl: '/bot-api/api/v1',
+    adminWhatsapp: '553194001072',
+  },
 };
